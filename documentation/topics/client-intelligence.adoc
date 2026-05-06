@@ -1,0 +1,40 @@
+== Client Intelligence
+
+=== Intelligence Levels
+
+* **Basic** (`IntelligenceBasic`) -- Connects to a single server. No topology awareness.
+* **Topology-aware** (`IntelligenceTopologyAware`) -- Discovers cluster members via topology updates.
+* **Hash-distribution-aware** (`IntelligenceHashDistAware`) -- Routes operations to the primary owner of the key based on consistent hashing. This is the default.
+
+Set the intelligence level with `WithClientIntelligence`:
+
+[source,go]
+----
+client, err := hotrod.NewClient(ctx, uri,
+	hotrod.WithClientIntelligence(hotrod.IntelligenceTopologyAware),
+)
+----
+
+=== Topology Inspection
+
+You can inspect the current cluster topology known to the client:
+
+`TopologyServers()`::
+Returns the list of server addresses known from the current cluster topology.
+
+`HasConsistentHash(cacheName string)`::
+Reports whether the client has received a consistent hash topology for the named cache.
+
+`ConsistentHashOwnerCount(cacheName string)`::
+Returns the number of distinct owners in the consistent hash for the named cache.
+
+[source,go]
+----
+servers := client.TopologyServers()
+fmt.Printf("cluster members: %v\n", servers)
+
+if client.HasConsistentHash("my-cache") {
+	owners := client.ConsistentHashOwnerCount("my-cache")
+	fmt.Printf("owner count: %d\n", owners)
+}
+----

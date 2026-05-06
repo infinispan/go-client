@@ -1,0 +1,93 @@
+== Security
+
+=== Authentication
+
+The client supports the following SASL authentication mechanisms:
+
+* **SCRAM-SHA-256** -- Default when username and password are provided.
+* **PLAIN** -- Simple username/password authentication.
+* **EXTERNAL** -- Certificate-based authentication (mTLS).
+* **OAUTHBEARER** -- OAuth2/JWT bearer token authentication (RFC 7628).
+
+You can provide credentials directly in the connection URI:
+
+[source,go]
+----
+client, err := hotrod.NewClient(ctx, "hotrod://admin:password@localhost:11222")
+----
+
+Alternatively, use the `WithAuth` option to specify the mechanism and credentials programmatically:
+
+[source,go]
+----
+client, err := hotrod.NewClient(ctx, "hotrod://localhost:11222",
+	hotrod.WithAuth("SCRAM-SHA-256", "admin", "password"),
+)
+----
+
+When a username and password are present (either in the URI or via `WithAuth`), the client defaults to SCRAM-SHA-256.
+When a token is provided but no username, the client defaults to OAUTHBEARER.
+When a client certificate is configured but no username or token is provided, the client defaults to EXTERNAL.
+
+=== OAuth2 Bearer Token Authentication
+
+To authenticate with an OAuth2 or JWT bearer token, use the `WithToken` option:
+
+[source,go]
+----
+client, err := hotrod.NewClient(ctx, "hotrod://localhost:11222",
+	hotrod.WithToken("eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."),
+)
+----
+
+You can also pass the token and mechanism through URI query parameters:
+
+[source]
+----
+hotrod://localhost:11222?sasl_mechanism=OAUTHBEARER&token=eyJhbGci...
+----
+
+You can explicitly select the mechanism with `WithAuth` combined with `WithToken`:
+
+[source,go]
+----
+client, err := hotrod.NewClient(ctx, "hotrod://localhost:11222",
+	hotrod.WithAuth("OAUTHBEARER", "", ""),
+	hotrod.WithToken(token),
+)
+----
+
+[NOTE]
+====
+OAUTHBEARER requires the Infinispan server to be configured with a token realm, for example backed by Keycloak or another OAuth2 provider.
+====
+
+=== TLS and Mutual TLS
+
+Use the `hotrods://` URI scheme or provide TLS options to enable encrypted connections.
+
+`WithTLS(c *tls.Config)`::
+Sets a custom `tls.Config` for full control over the TLS configuration.
+
+`WithTrustStore(path string)`::
+Sets the path to a PEM-encoded CA certificate file for server verification.
+
+`WithClientCert(certPath, keyPath string)`::
+Sets the client certificate and private key for mutual TLS (mTLS) authentication.
+
+`WithSNIHostName(name string)`::
+Sets the TLS Server Name Indication (SNI) hostname.
+
+`WithSSLHostnameValidation(b bool)`::
+Enables or disables TLS hostname verification.
+Set to `false` only for development environments.
+
+You can also configure TLS through URI query parameters:
+
+[source]
+----
+hotrods://admin:password@localhost:11222?trust_store_file_name=/path/to/ca.pem&sni_host_name=infinispan.example.com
+hotrods://localhost:11222?client_cert=/path/to/cert.pem&client_key=/path/to/key.pem
+----
+
+The supported query parameters are `trust_store_file_name` (or `trust_ca`), `client_cert` (or `key_store_file_name`), `client_key` (or `key_store_password`), and `sni_host_name` (or `sni_host`).

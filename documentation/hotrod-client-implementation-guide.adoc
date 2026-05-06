@@ -1,0 +1,558 @@
+= Hot Rod Client Implementation Guide
+:toc: left
+:toclevels: 3
+
+This document captures the non-obvious details, pitfalls, and hard-won lessons from implementing the Infinispan Hot Rod client in Go.
+It is intended as a reference for anyone porting the client to another language.
+
+== Protocol Basics
+
+=== Wire Format
+
+Hot Rod 4.1 is a request/response binary protocol over TCP.
+All multi-byte integers use variable-length encoding (VInt/VLong) unless otherwise noted.
+
+.Magic bytes
+[cols="1,1"]
+|===
+| Request  | `0xA0`
+| Response | `0xA1`
+|===
+
+.Protocol version
+The version byte is `41` (decimal), representing Hot Rod 4.1.
+
+=== Variable-Length Integer Encoding (VInt)
+
+Integers are encoded 7 bits per byte, with the high bit indicating continuation.
+Least-significant group first (little-endian byte order within the varint).
+
+[source]
+----
+Encode(v):
+  u = unsigned(v)
+  while u & ~0x7F != 0:
+    emit byte(u & 0x7F | 0x80)
+    u >>>= 7    // unsigned right shift
+  emit byte(u)
+----
+
+VInt handles int32 (up to 5 bytes). VLong handles int64 (up to 9 bytes).
+Signed values are transmitted as their bitwise unsigned representation; the sign is preserved because both encoder and decoder agree on the width.
+
+=== Request Header
+
+[cols="2,1,3"]
+|===
+| Field               | Encoding  | Notes
+| Magic               | U1        | `0xA0`
+| Message ID          | VLong     | Unique per connection, monotonically increasing
+| Version             | U1        | `41`
+| Opcode              | U1        | See <<opcodes>>
+| Cache name          | LP bytes  | VInt length + bytes; empty for Ping/Auth
+| Flags               | VInt      |
+| Client intelligence | U1        | `0x01` Basic, `0x02` Topology, `0x03` Hash-dist
+| Topology ID         | VInt      | Last known; `0` on first request
+| Key media type      | MediaType | See <<media-types>>
+| Value media type    | MediaType | See <<media-types>>
+| Other params count  | VInt      | `0` (empty map)
+|===
+
+=== Response Header
+
+[cols="2,1,3"]
+|===
+| Field                     | Encoding | Notes
+| Magic                     | U1       | `0xA1`
+| Message ID                | VLong    | Matches the request
+| Opcode                    | U1       | Response opcode
+| Status                    | U1       | See <<status-codes>>
+| Topology change marker    | U1       | `0` = no change; `1` = topology data follows
+|===
+
+If the topology change marker is `1`, a <<topology-update>> follows immediately.
+
+[[media-types]]
+=== Media Type Encoding
+
+A media type field starts with a kind byte:
+
+- `0x00` — None (no media type)
+- `0x01` — Predefined: followed by VInt ID, then VInt param count (usually `0`)
+- `0x02` — Custom: followed by LP-string name, then VInt param count
+
+.Common predefined media type IDs
+[cols="1,1"]
+|===
+| `1`  | `application/x-java-object`
+| `2`  | `application/json`
+| `3`  | `application/octet-stream`
+| `12` | `application/x-protostream`
+| `13` | `text/plain`
+|===
+
+[[opcodes]]
+=== Opcodes
+
+[cols="1,1,1,1"]
+|===
+| Operation    | Request | Response | Body
+| Ping         | `0x17`  | `0x18`   | Empty request; response has media types + server info
+| AuthMechList | `0x21`  | `0x22`   | Empty request; response: VInt count, then LP-string per mechanism
+| Auth         | `0x23`  | `0x24`   | Request: LP-string mechanism + LP-bytes response data
+| Put          | `0x01`  | `0x02`   | Request: LP-bytes key + time units + LP-bytes value; response: empty (or <<metadata-value>> if `FORCE_RETURN_VALUE`)
+| Get          | `0x03`  | `0x04`   | Request: LP-bytes key; response: LP-bytes value (or status `0x02` for miss)
+| Remove       | `0x0B`  | `0x0C`   | Request: LP-bytes key; response: empty (or <<metadata-value>> if `FORCE_RETURN_VALUE`)
+| PutIfAbsent  | `0x05`  | `0x06`   | Request: LP-bytes key + time units + LP-bytes value; response: empty (or <<metadata-value>> if `FORCE_RETURN_VALUE`)
+| Replace      | `0x07`  | `0x08`   | Request: LP-bytes key + time units + LP-bytes value; response: empty (or <<metadata-value>> if `FORCE_RETURN_VALUE`)
+| ContainsKey  | `0x0F`  | `0x10`   | Request: LP-bytes key; response: status only
+| Clear        | `0x13`  | `0x14`   | Empty request and response
+| Size         | `0x29`  | `0x2A`   | Empty request; response: VInt count
+|===
+
+[[status-codes]]
+=== Status Codes
+
+[cols="1,1"]
+|===
+| `0x00` | Success
+| `0x01` | Not executed (conditional op)
+| `0x02` | Key does not exist
+| `0x03` | Success with previous value
+| `0x04` | Not executed with previous value
+| `0x81+` | Error (read LP-string error message from body)
+|===
+
+[[flags]]
+=== Operation Flags
+
+The `Flags` field in the request header is a VInt-encoded bitmask that modifies operation behavior.
+
+[cols="1,2,3"]
+|===
+| Bit      | Name                          | Effect
+
+| `0x0001` | `FORCE_RETURN_VALUE`          | Put/Remove/Replace/PutIfAbsent return the previous value (response status changes to `0x03` or `0x04`)
+| `0x0002` | `DEFAULT_LIFESPAN`            | Use server-configured default lifespan instead of the value in the request
+| `0x0004` | `DEFAULT_MAXIDLE`             | Use server-configured default max-idle instead of the value in the request
+| `0x0008` | `SKIP_CACHE_LOAD`             | Skip loading the entry from persistent cache stores
+| `0x0010` | `SKIP_INDEXING`               | Don't update search indexes for this operation
+| `0x0020` | `SKIP_LISTENER_NOTIFICATION`  | Don't fire cache listener events for this operation
+|===
+
+Multiple flags can be combined with bitwise OR. For example, `FORCE_RETURN_VALUE | SKIP_LISTENER_NOTIFICATION` = `0x0021`.
+
+==== FORCE_RETURN_VALUE Response Handling
+
+When `FORCE_RETURN_VALUE` is set, the server responds with status `0x03` (`StatusSuccessWithPrevious`) or `0x04` (`StatusNotExecWithPrevious`) instead of the normal `0x00`/`0x01`.
+The response body contains a <<metadata-value>> rather than being empty.
+
+If there is no previous value (e.g., first Put to a key), the server still responds with status `0x03` but the value inside the metadata envelope has zero length. Clients should normalize zero-length values to null/nil.
+
+[[metadata-value]]
+=== Metadata Value Encoding (Hot Rod 4.0+)
+
+In Hot Rod 4.0+, responses that include a previous value (status `0x03` or `0x04`) encode the value with a metadata envelope. This is **not** simple LP-bytes — it includes expiration metadata and a version stamp.
+
+[cols="2,1,3"]
+|===
+| Field               | Encoding | Notes
+| Flags               | U1       | Bit `0x01` = lifespan is infinite; bit `0x02` = max-idle is infinite
+| Creation time       | Long     | Only present if lifespan is **not** infinite (`flags & 0x01 == 0`)
+| Lifespan            | VInt     | Only present if lifespan is **not** infinite (seconds)
+| Last used time      | Long     | Only present if max-idle is **not** infinite (`flags & 0x02 == 0`)
+| Max idle            | VInt     | Only present if max-idle is **not** infinite (seconds)
+| Version             | Long     | Always present; 8 bytes, entry version for optimistic locking
+| Value               | LP-bytes | The actual previous value
+|===
+
+.Example: entry with both lifespan and max-idle infinite (common case)
+[source]
+----
+03                              -- flags: 0x01 | 0x02 (both infinite)
+FF FF FF FF FF FF FF FF         -- version (8 bytes)
+02 76 31                        -- LP-bytes: length=2, "v1"
+----
+
+.Example: entry with explicit lifespan of 60 seconds
+[source]
+----
+02                              -- flags: 0x02 only (max-idle infinite, lifespan NOT infinite)
+00 00 01 8A 12 34 56 78         -- creation time (8 bytes, milliseconds since epoch)
+3C                              -- lifespan = 60 (VInt)
+00 00 00 00 00 00 00 01         -- version (8 bytes)
+05 68 65 6C 6C 6F               -- LP-bytes: length=5, "hello"
+----
+
+[IMPORTANT]
+====
+This format matches `GetWithMetadataOperation.readMetadataValue()` in the Java client (`Codec40.java`).
+Earlier protocol versions (< 4.0) used simple LP-bytes for previous values, but **Hot Rod 4.0+ always uses this metadata envelope**.
+Failing to read the metadata will desync the reader, causing the next response to be parsed incorrectly (typically manifesting as "invalid response magic" errors).
+====
+
+=== Time Units Encoding (Put/Replace)
+
+Lifespan and max-idle are packed into a single byte as two nibbles, followed by optional VLong values.
+
+[source]
+----
+packed = (lifespan_code << 4) | maxidle_code
+
+Codes:
+  0x00 = seconds       0x01 = milliseconds   0x02 = nanoseconds
+  0x03 = microseconds  0x04 = minutes        0x05 = hours
+  0x06 = days          0x07 = default (server-configured)
+  0x08 = infinite
+
+If code < 0x07, the corresponding VLong value follows.
+If code >= 0x07, no value follows (implicit).
+----
+
+=== Ping Response Body (version >= 3.0)
+
+After the response header:
+
+1. Key media type (MediaType encoding)
+2. Value media type (MediaType encoding)
+3. Server version (U1)
+4. Supported opcode count (VInt)
+5. Per opcode: U2 (opcode as unsigned short)
+
+== Connection Lifecycle
+
+=== Handshake Sequence
+
+For each new TCP connection:
+
+1. **Ping** — Send a Ping request with `topologyID=0` and the desired `clientIntelligence`.
+   The server responds with supported operations and possibly a topology update.
+   Ping uses an empty cache name, so the server only sends a topology update if a default cache exists.
+
+2. **Authentication** — If credentials are configured:
+   a. Send `AuthMechList` to discover supported SASL mechanisms.
+   b. Execute the SASL exchange via one or more `Auth` request/response rounds.
+   c. SCRAM-SHA-256 is the recommended mechanism. PLAIN is also supported.
+   d. **Each connection must authenticate independently** — create a fresh SASL state machine per connection.
+
+=== Multiplexing
+
+A single TCP connection handles multiple concurrent operations.
+Each request carries a unique message ID; responses are matched by message ID.
+A dedicated read loop goroutine/thread processes all incoming responses and dispatches them to waiting callers.
+
+IMPORTANT: The read loop processes topology updates synchronously before delivering the response to the caller.
+Any lock acquisition in the topology callback must not conflict with the read loop's caller.
+
+== Topology Updates
+
+[[topology-update]]
+=== Wire Format
+
+When the topology change marker is `1`, the response contains:
+
+[cols="2,1,3"]
+|===
+| Field           | Encoding | Notes
+| Topology ID     | VInt     | **Not a monotonic counter** — see <<topology-id-pitfall>>
+| Server count    | VInt     |
+| _Per server:_   |          |
+| Host            | LP-string| Hostname or IP as seen by the server
+| Port            | U2       | Big-endian unsigned short (typically `11222`)
+|===
+
+If `clientIntelligence == 0x03` (hash-distribution-aware), additional fields follow:
+
+[cols="2,1,3"]
+|===
+| Hash function version  | U1    | `0` = no hash info, `> 0` = hash data follows
+| Number of segments     | VInt  |
+| _Per segment (if version > 0):_ | |
+| Owner count            | U1    |
+| _Per owner:_           |       |
+| Member index           | VInt  | Index into the server list above
+|===
+
+=== When the Server Sends Topology Updates
+
+The server decides whether to include a topology update by comparing the client's `topologyID` with its own.
+The server only sends topology updates for requests that target a **cache** (non-empty cache name).
+Ping and Auth operations use an empty cache name, so they typically do **not** trigger topology updates (unless the server has a default cache configured).
+
+This means the client will only learn about topology changes when it sends a cache operation (Put, Get, etc.).
+
+[[topology-id-pitfall]]
+=== Topology ID: Not a Monotonic Counter (Critical Pitfall)
+
+The Infinispan server computes the topology ID as:
+[source,java]
+----
+int currentTopologyId = cacheTopology.getReadConsistentHash().hashCode();
+----
+
+This is a **Java `hashCode()`** — a signed 32-bit value that can be **negative, zero, or positive**.
+It is NOT a monotonically increasing sequence number.
+
+[IMPORTANT]
+====
+Do **not** use `<=` to filter stale topology updates. Use `==` to skip duplicates:
+
+[source]
+----
+// WRONG — rejects ~50% of topology updates where hashCode is negative
+if update.id <= stored_topo_id: skip
+
+// CORRECT — only skip if it's the exact same topology
+if update.id == stored_topo_id: skip
+----
+
+This was a real bug in the Go client that caused topology updates to be silently dropped whenever the consistent hash's `hashCode()` happened to be negative.
+====
+
+=== Address Translation
+
+The server reports its **internal** address (as seen from inside its network).
+In containerized deployments (Docker, Kubernetes), this is the container's internal IP, not the externally-reachable address.
+
+On Linux, Docker bridge network IPs are typically routable from the host, so topology updates work transparently.
+In other environments, the client may need an address translation layer.
+
+=== Connection Draining on Topology Change
+
+When a topology update removes a server, the connection to that server must be cleaned up.
+However, the topology callback is called **from the read loop** of one of the active connections.
+If that connection's address is no longer in the new topology:
+
+- **Do not close the connection synchronously** — the read loop is in the middle of processing a response.
+  Closing would cause concurrent operations to fail with "use of closed connection".
+- **Drain instead**: mark the connection as draining (reject new operations), remove it from the connection pool,
+  and let the read loop close it after all pending operations have been serviced.
+
+== Hash-Distribution-Aware Routing
+
+=== Overview
+
+With `clientIntelligence=0x03`, the client receives segment ownership data alongside topology updates.
+This allows routing keyed operations (Put, Get, Remove, etc.) directly to the primary owner, avoiding an internal forwarding hop on the server.
+
+=== Segment Mapping
+
+[source]
+----
+normalizedHash = hash(key) & 0x7FFFFFFF    // mask to positive int31
+segmentSize    = ceil(2^31 / numSegments)   // integer ceiling
+segment        = normalizedHash / segmentSize
+primaryOwner   = segmentOwners[segment][0]  // first owner is primary
+----
+
+If the segment has no owners or the consistent hash is not available for a cache, fall back to round-robin.
+
+=== MurmurHash3 (Infinispan Variant)
+
+Infinispan uses a **custom pre-release draft** of MurmurHash3 (x64_128).
+It differs from the canonical finalized MurmurHash3 in the `bmix` constants and structure.
+This hash function is part of the wire protocol and has been stable since Infinispan 5.0.
+
+.Key parameters
+[cols="1,1"]
+|===
+| Seed         | `9001`
+| h1 init      | `0x9368e53c2f6af274 ^ seed`
+| h2 init      | `0x586dcd208f7cd3fd ^ seed`
+| c1 init      | `0x87c37b91114253d5`
+| c2 init      | `0x4cf5ad432745937f`
+| Block size   | 16 bytes
+| Result       | Upper 32 bits of `h1` after finalization (signed int32)
+|===
+
+.Algorithm pseudocode
+[source]
+----
+function hash(key: bytes) -> int32:
+    h1, h2, c1, c2 = init values (see above)
+
+    // Process 16-byte blocks
+    for each 16-byte block in key:
+        k1 = little_endian_uint64(block[0:8])
+        k2 = little_endian_uint64(block[8:16])
+        h1, h2, c1, c2 = bmix(h1, h2, k1, k2, c1, c2)
+
+    // Process tail bytes (key.length % 16)
+    k1 = k2 = 0
+    // Fallthrough switch on (length & 15):
+    //   bytes 8-14 contribute to k2 (sign-extended, shifted)
+    //   bytes 0-7  contribute to k1 (sign-extended, shifted)
+    // Then: h1, h2, c1, c2 = bmix(h1, h2, k1, k2, c1, c2)
+
+    // Finalization
+    h2 ^= length
+    h1 += h2;  h2 += h1
+    h1 = fmix(h1);  h2 = fmix(h2)
+    h1 += h2
+
+    return int32(h1 >> 32)   // upper 32 bits, as signed int32
+----
+
+.bmix
+[source]
+----
+function bmix(h1, h2, k1, k2, c1, c2):
+    k1 *= c1;  k1 = rotl64(k1, 23);  k1 *= c2;  h1 ^= k1
+    h1 += h2
+    h2 = rotl64(h2, 41)
+    k2 *= c2;  k2 = rotl64(k2, 23);  k2 *= c1;  h2 ^= k2
+    h2 += h1
+    h1 = h1 * 3 + 0x52dce729
+    h2 = h2 * 3 + 0x38495ab5
+    c1 = c1 * 5 + 0x7b7d159c
+    c2 = c2 * 5 + 0x6bce6396
+    return h1, h2, c1, c2
+----
+
+.fmix
+[source]
+----
+function fmix(k):
+    k ^= k >>> 33
+    k *= 0xff51afd7ed558ccd
+    k ^= k >>> 33
+    k *= 0xc4ceb9fe1a85ec53
+    k ^= k >>> 33
+    return k
+----
+
+==== Language-Specific Pitfalls
+
+===== Signed byte sign-extension in tail processing
+
+Java's `byte` type is signed (-128..127). The tail processing does `(long) key[i]` which **sign-extends** the byte.
+For example, `0xFF` (-1 as signed byte) becomes `0xFFFFFFFFFFFFFFFF` as a 64-bit value, not `0x00000000000000FF`.
+
+In languages with unsigned bytes (Go, Rust, C with `uint8_t`), you must explicitly sign-extend:
+
+[source,go]
+----
+// Go: cast byte -> int8 -> int64 to replicate Java's sign extension
+func signExtend(b byte) int64 {
+    return int64(int8(b))
+}
+----
+
+[source,rust]
+----
+// Rust
+fn sign_extend(b: u8) -> i64 {
+    b as i8 as i64
+}
+----
+
+[source,c]
+----
+// C
+int64_t sign_extend(uint8_t b) {
+    return (int64_t)(int8_t)b;
+}
+----
+
+NOTE: This only affects the **tail processing** (leftover bytes after the last full 16-byte block).
+The block reads use `little_endian_uint64` which doesn't involve individual byte sign-extension.
+
+===== Large unsigned constants
+
+The init values (e.g., `0x9368e53c2f6af274`) exceed the maximum signed 64-bit integer.
+In languages that don't support unsigned 64-bit literals (older Java, some scripting languages), use the equivalent negative signed value or bitwise tricks.
+In Go, use `uint64` for all hash state to avoid constant overflow errors.
+
+==== Test Vectors
+
+These values were generated from `org.infinispan.commons.hash.MurmurHash3.hash(byte[])` and should be used to validate any new implementation:
+
+[cols="2,2,1"]
+|===
+| Input (name)     | Bytes (hex)                                  | Expected hash (int32)
+| empty            | (none)                                       | `89125410`
+| single `0x00`    | `00`                                         | `-787121744`
+| single `0x01`    | `01`                                         | `788465426`
+| single `0xFF`    | `ff`                                         | `-29042976`
+| "hello"          | `68 65 6c 6c 6f`                             | `1671093224`
+| "infinispan"     | `69 6e 66 69 6e 69 73 70 61 6e`             | `-2031786003`
+| "test-key-1"     | `74 65 73 74 2d 6b 65 79 2d 31`             | `1385724438`
+| 16 bytes         | `30..66` ("0123456789abcdef")                | `26898387`
+| 17 bytes         | `30..67` ("0123456789abcdefg")               | `-1536414354`
+| 32 bytes         | `30..66 30..66` (repeated)                   | `1705745350`
+| "key-0"          | `6b 65 79 2d 30`                             | `2111941704`
+| "key-1"          | `6b 65 79 2d 31`                             | `-1542573449`
+| "key-99"         | `6b 65 79 2d 39 39`                          | `-1491479468`
+| "key-100"        | `6b 65 79 2d 31 30 30`                       | `-1822295436`
+| high bytes       | `80 fe 7f 01`                                | `-99048400`
+|===
+
+The `0xFF` and `high_bytes` test cases specifically validate correct sign-extension behavior.
+
+== Authentication
+
+=== SASL Flow
+
+1. Send `AuthMechList` (opcode `0x21`) to get supported mechanisms.
+2. Start the chosen SASL mechanism (SCRAM-SHA-256 or PLAIN).
+3. Loop: send `Auth` (opcode `0x23`) with the mechanism name + client response bytes.
+4. Server replies with `completed` flag (U1) + challenge bytes (LP-bytes).
+5. If not completed, evaluate the challenge and send another `Auth`.
+6. After completion, optionally verify the server's final message.
+
+IMPORTANT: Create a **fresh SASL state machine for each connection**.
+Do not reuse state across connections — the nonces and keys are connection-specific.
+
+=== SCRAM-SHA-256 Notes
+
+- Uses SHA-256 for HMAC and key derivation.
+- The client-first-message omits the GS2 header in the `Auth` payload; the server expects the bare SCRAM message.
+- Iteration count and salt come from the server's first challenge.
+- The SaltedPassword derivation uses PBKDF2 with HMAC-SHA-256.
+
+== Architecture Recommendations
+
+=== Connection Pool
+
+- Maintain a map of `address -> connection`.
+- A round-robin balancer selects from known server addresses for non-keyed operations.
+- For keyed operations, use the consistent hash to route to the primary owner; fall back to round-robin if no hash is available.
+- New connections are established lazily on first use (`ensureConn` pattern).
+
+=== Concurrency Model
+
+- One TCP connection handles many concurrent operations via message ID multiplexing.
+- A single read loop per connection dispatches responses to waiting callers.
+- Use a concurrent map (or equivalent) for pending operations: `messageID -> {operation, response_channel}`.
+- Protect the connection pool with a read-write lock: reads for routing, writes for topology updates.
+
+=== Deadlock Prevention
+
+The topology update callback is called from the read loop, which runs on a connection managed by the pool.
+If `ensureConn` holds an exclusive lock while dialing (which internally sends a Ping, whose response may include a topology update), the topology callback will deadlock trying to acquire the same lock.
+
+**Solution**: Dial new connections without holding the pool lock. After dialing, acquire the lock only to store the connection (with a double-check to avoid duplicates).
+
+=== Error Handling on Topology Change
+
+When the topology changes and a connection's address is no longer listed:
+
+1. Remove the connection from the pool map (prevents new operations from using it).
+2. **Do not close it synchronously** — the read loop may be in the middle of processing responses for other callers.
+3. Mark the connection as "draining" so it rejects new operations.
+4. Let the read loop close the connection once all pending operations are serviced.
+
+== Reference: Java Source Locations
+
+These are the authoritative source files in the Infinispan server codebase:
+
+[cols="1,2"]
+|===
+| MurmurHash3                | `commons/all/src/main/java/org/infinispan/commons/hash/MurmurHash3.java`
+| Segment mapping            | `commons/all/src/main/java/org/infinispan/commons/util/Util.java` (lines ~683-694)
+| Response encoder           | `server/hotrod/src/main/java/org/infinispan/server/hotrod/Encoder2x.java`
+| Encoder v4.x (extends 2x)  | `server/hotrod/src/main/java/org/infinispan/server/hotrod/Encoder4x.java`
+| VInt encoding              | `server/core/src/main/java/org/infinispan/server/core/transport/VInt.java`
+| Server address selection   | `server/hotrod/src/main/java/org/infinispan/server/hotrod/MultiHomedServerAddress.java`
+| Topology ID computation    | `Encoder2x.java:697` — `cacheTopology.getReadConsistentHash().hashCode()`
+|===

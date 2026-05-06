@@ -1,0 +1,351 @@
+== Queries
+
+=== Overview
+
+The Go client supports the Ickle query language for searching indexed caches.
+Call `Query` on a `RemoteCache` to execute a query and receive results:
+
+[source,go]
+----
+result, err := cache.Query(ctx, "FROM example.Person WHERE age >= 30")
+----
+
+Queries require a cache with an indexed protobuf schema registered on the server.
+
+=== Example Schemas
+
+The examples in this section use the following protobuf schemas.
+
+==== Simple Person
+
+[source,protobuf]
+----
+syntax = "proto3";
+package example;
+
+/** @Indexed */
+message Person {
+    /** @Keyword(projectable = true, sortable = true) */
+    string name = 1;
+    /** @Basic(projectable = true, sortable = true) */
+    int32 age = 2;
+}
+----
+
+==== Person with Address (Nested Type)
+
+[source,protobuf]
+----
+syntax = "proto3";
+package example;
+
+message Address {
+    /** @Keyword(projectable = true) */
+    string street = 1;
+    /** @Keyword(projectable = true) */
+    string city = 2;
+    /** @Keyword(projectable = true) */
+    string country = 3;
+}
+
+/** @Indexed */
+message PersonWithAddress {
+    /** @Keyword(projectable = true, sortable = true) */
+    string name = 1;
+    /** @Basic(projectable = true, sortable = true) */
+    int32 age = 2;
+    /** @Indexed */
+    repeated Address addresses = 3;
+}
+----
+
+==== Restaurant (Spatial Type)
+
+[source,protobuf]
+----
+syntax = "proto3";
+package example;
+
+/**
+ * @Indexed
+ * @GeoPoint(fieldName = "location", projectable = true, sortable = true)
+ */
+message Restaurant {
+    /** @Keyword(projectable = true, sortable = true) */
+    string name = 1;
+    /** @Text */
+    string description = 2;
+    /** @Latitude(fieldName = "location") */
+    double latitude = 3;
+    /** @Longitude(fieldName = "location") */
+    double longitude = 4;
+}
+----
+
+The `@GeoPoint` annotation creates a composite spatial field called `location` from the separate `@Latitude` and `@Longitude` fields.
+
+==== Book (Vector Type)
+
+[source,protobuf]
+----
+syntax = "proto3";
+package example;
+
+/** @Indexed */
+message Book {
+    /** @Keyword(projectable = true, sortable = true) */
+    string title = 1;
+    /** @Keyword(projectable = true, normalizer = "lowercase") */
+    string genre = 2;
+    /** @Text */
+    string description = 3;
+    /** @Vector(dimension = 3, similarity = COSINE) */
+    repeated float embedding = 4;
+}
+----
+
+The `@Vector` annotation requires a `dimension` parameter and an optional `similarity` parameter.
+Supported similarity algorithms are `L2`, `COSINE`, `INNER_PRODUCT`, and `MAX_INNER_PRODUCT`.
+
+=== Basic Queries
+
+Use `FROM` to query all entries of a type:
+
+[source,go]
+----
+result, err := cache.Query(ctx, "FROM example.Person")
+----
+
+Use `WHERE` with named parameters to filter results.
+Bind parameter values with `WithQueryParam`:
+
+[source,go]
+----
+result, err := cache.Query(ctx, "FROM example.Person WHERE age > :minAge",
+    hotrod.WithQueryParam("minAge", int32(25)),
+)
+----
+
+Use `SELECT` to project specific fields:
+
+[source,go]
+----
+result, err := cache.Query(ctx, "SELECT name, age FROM example.Person WHERE age > :minAge",
+    hotrod.WithQueryParam("minAge", int32(25)),
+)
+----
+
+Use `ORDER BY` to sort results:
+
+[source,go]
+----
+result, err := cache.Query(ctx, "FROM example.Person ORDER BY age DESC")
+----
+
+Supported parameter types are `string`, `int32`, `int`, `int64`, `float64`, `float32`, `[]float32`, and `bool`.
+
+=== Pagination
+
+Use `WithQueryMaxResults` and `WithQueryStartOffset` to paginate through large result sets:
+
+[source,go]
+----
+result, err := cache.Query(ctx, "FROM example.Person ORDER BY age",
+    hotrod.WithQueryMaxResults(10),
+    hotrod.WithQueryStartOffset(0),
+)
+fmt.Printf("returned=%d total=%d exact=%v\n",
+    result.NumResults, result.HitCount, result.HitCountExact)
+----
+
+The `QueryResult` struct contains:
+
+`NumResults`:: The number of results returned in this page.
+`HitCount`:: The total number of matching entries across all pages.
+`HitCountExact`:: Whether `HitCount` is an exact count or an approximation.
+`Entries`:: The decoded result entries as `[]QueryEntry`.
+`ProjectionSize`:: The number of projected fields per result, or zero if no projection is used.
+
+=== Decoding Results
+
+The client automatically unwraps query results into `QueryEntry` values.
+Each entry in `result.Entries` contains either entity data or projection columns, depending on the query type.
+
+==== Entity Queries
+
+For queries without `SELECT`, each `QueryEntry` has `TypeName` (the protobuf type name) and `Value` (the raw protobuf bytes):
+
+[source,go]
+----
+result, err := cache.Query(ctx, "FROM example.Person")
+if err != nil {
+    log.Fatal(err)
+}
+for _, entry := range result.Entries {
+    fmt.Printf("type: %s\n", entry.TypeName)
+    // Decode entry.Value with a protobuf library or manually.
+    // Field 1 (name) is a length-delimited string.
+    // Field 2 (age) is a varint.
+}
+----
+
+==== Projection Queries
+
+For queries with `SELECT`, each `QueryEntry` has `Projections`, a slice of Go-typed values corresponding to each projected column:
+
+[source,go]
+----
+result, err := cache.Query(ctx,
+    "SELECT name, age FROM example.Person WHERE age > :minAge",
+    hotrod.WithQueryParam("minAge", int32(25)),
+)
+for _, entry := range result.Entries {
+    fmt.Printf("name=%s age=%d\n", entry.Projections[0], entry.Projections[1])
+}
+----
+
+Projection values are automatically unwrapped to native Go types: `string`, `int32`, `int64`, `float32`, `float64`, `bool`, or `[]byte` for nested messages.
+
+See the link:https://github.com/infinispan/infinispan-simple-tutorials/tree/main/non-java-clients/go/query[query] and link:https://github.com/infinispan/infinispan-simple-tutorials/tree/main/non-java-clients/go/vector-search[vector-search] tutorials for complete working examples.
+
+=== Nested Type Queries
+
+You can query across nested message fields using dot notation:
+
+[source,go]
+----
+result, err := cache.Query(ctx,
+    "FROM example.PersonWithAddress WHERE addresses.city = :city",
+    hotrod.WithQueryParam("city", "London"),
+)
+----
+
+You can also combine conditions across the nested type:
+
+[source,go]
+----
+result, err := cache.Query(ctx,
+    "FROM example.PersonWithAddress WHERE addresses.city = :city AND age > :minAge",
+    hotrod.WithQueryParam("city", "London"),
+    hotrod.WithQueryParam("minAge", int32(25)),
+)
+----
+
+=== Spatial Queries
+
+Spatial queries search for entries based on geographic coordinates.
+The following predicates are available for fields annotated with `@GeoPoint`.
+
+==== Within Circle
+
+Find entries within a radius from a center point.
+The default distance unit is meters:
+
+[source,go]
+----
+result, err := cache.Query(ctx,
+    "FROM example.Restaurant r WHERE r.location within circle(41.91, 12.46, :distance)",
+    hotrod.WithQueryParam("distance", float64(100)),
+)
+----
+
+Specify a unit (`km`, `mi`, `yd`, `nm`) after the distance value:
+
+[source,go]
+----
+result, err := cache.Query(ctx,
+    "FROM example.Restaurant r WHERE r.location within circle(41.91, 12.46, :distance km)",
+    hotrod.WithQueryParam("distance", float64(0.1)),
+)
+----
+
+==== Within Box
+
+Find entries within a bounding rectangle defined by top-left and bottom-right corners:
+
+[source,go]
+----
+result, err := cache.Query(ctx,
+    "FROM example.Restaurant r WHERE r.location within box(41.91, 12.45, 41.90, 12.46)",
+)
+----
+
+The arguments are top-left latitude, top-left longitude, bottom-right latitude, and bottom-right longitude.
+
+==== Within Polygon
+
+Find entries within an arbitrary polygon defined by a list of vertices:
+
+[source,go]
+----
+result, err := cache.Query(ctx,
+    "FROM example.Restaurant r WHERE r.location within polygon((41.91, 12.45), (41.91, 12.46), (41.90, 12.46), (41.90, 12.45))",
+)
+----
+
+==== Distance Projection and Ordering
+
+Use `distance()` to calculate the distance from a point, for sorting or projection:
+
+[source,go]
+----
+result, err := cache.Query(ctx,
+    "SELECT r.name, distance(r.location, 41.91, 12.46) FROM example.Restaurant r ORDER BY distance(r.location, 41.91, 12.46)",
+)
+----
+
+=== Vector (kNN) Search
+
+Vector queries find the nearest neighbors to a query vector using the `<->` operator.
+
+==== Basic kNN Query
+
+[source,go]
+----
+result, err := cache.Query(ctx,
+    "FROM example.Book b WHERE b.embedding <-> [:v]~:k",
+    hotrod.WithQueryParam("v", []float32{0.9, 0.1, 0.1}),
+    hotrod.WithQueryParam("k", int32(3)),
+)
+----
+
+The `[:v]` parameter is the query vector, and `:k` is the number of nearest neighbors to return.
+
+==== Score Projection
+
+Use `score()` to include the similarity score in the results:
+
+[source,go]
+----
+result, err := cache.Query(ctx,
+    "SELECT b.title, b.genre, score(b) FROM example.Book b WHERE b.embedding <-> [:v]~:k",
+    hotrod.WithQueryParam("v", []float32{0.9, 0.1, 0.1}),
+    hotrod.WithQueryParam("k", int32(3)),
+)
+----
+
+==== Hybrid: Vector with Filtering
+
+Combine kNN search with traditional filters using the `filtering` clause:
+
+[source,go]
+----
+result, err := cache.Query(ctx,
+    "SELECT score(b), b.title, b.genre FROM example.Book b WHERE b.embedding <-> [:v]~:k filtering (b.genre = 'Science Fiction')",
+    hotrod.WithQueryParam("v", []float32{0.9, 0.1, 0.1}),
+    hotrod.WithQueryParam("k", int32(3)),
+)
+----
+
+==== Hybrid: Vector with Full-Text
+
+Use the `:` operator inside a `filtering` clause for full-text search combined with vector similarity:
+
+[source,go]
+----
+result, err := cache.Query(ctx,
+    "SELECT score(b), b.title FROM example.Book b WHERE b.embedding <-> [:v]~:k filtering b.description : 'adventure'",
+    hotrod.WithQueryParam("v", []float32{0.1, 0.1, 0.9}),
+    hotrod.WithQueryParam("k", int32(5)),
+)
+----

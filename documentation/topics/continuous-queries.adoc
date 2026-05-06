@@ -1,0 +1,53 @@
+== Continuous Queries
+
+=== Overview
+
+Continuous queries use the Ickle query language to receive events when cache entries match or stop matching a query predicate.
+
+[NOTE]
+====
+Continuous queries require an indexed cache with a registered protobuf schema.
+====
+
+Call `ContinuousQuery` on a `RemoteCache` to register a continuous query:
+
+[source,go]
+----
+cq, err := cache.ContinuousQuery(ctx, "FROM example.Person WHERE age >= :minAge",
+	hotrod.WithCQParam("minAge", int32(18)),
+)
+if err != nil {
+	log.Fatal(err)
+}
+defer cache.RemoveContinuousQuery(ctx, cq)
+
+for event := range cq.Events {
+	switch event.Type {
+	case hotrod.CQJoining:
+		fmt.Printf("joined: key=%s\n", event.Key)
+	case hotrod.CQUpdated:
+		fmt.Printf("updated: key=%s\n", event.Key)
+	case hotrod.CQLeaving:
+		fmt.Printf("left: key=%s\n", event.Key)
+	}
+}
+----
+
+Each `CQEvent` contains:
+
+* `Type` -- One of `CQJoining` (entry now matches), `CQUpdated` (matching entry was modified), or `CQLeaving` (entry no longer matches).
+* `Key` -- The key of the affected entry.
+* `Value` -- The serialized value (present for joining and updated events).
+* `Projections` -- Projected field values, if the query uses a projection.
+
+=== Continuous Query Options
+
+`WithCQParam(name string, value any)`::
+Adds a named parameter binding to the Ickle query.
+Supported value types are `string`, `int32`, and `int64`.
+
+`WithCQChannelSize(n int)`::
+Sets the buffer size of the continuous query event channel.
+Defaults to 64.
+
+[[client-intelligence]]

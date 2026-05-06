@@ -1,0 +1,57 @@
+== Connecting to Infinispan
+
+=== Connection URI
+
+The client connects using a URI of the form:
+
+[source]
+----
+hotrod://username:password@host:port
+hotrods://username:password@host:port
+----
+
+The `hotrods://` scheme enables TLS.
+
+=== Client Options
+
+You can pass functional options to `hotrod.NewClient` to customize connection behavior.
+
+`WithConnectTimeout(d time.Duration)`::
+Sets the TCP connection timeout.
+If not specified, the system default applies.
+
+`WithSocketTimeout(d time.Duration)`::
+Sets the timeout for individual read and write operations.
+When a context does not already carry a deadline, this timeout is applied automatically.
+
+`WithTCPNoDelay(b bool)`::
+Enables or disables Nagle's algorithm on connections.
+Defaults to `true` (no delay).
+
+`WithTCPKeepAlive(b bool)`::
+Enables or disables TCP keep-alive probes on connections.
+Defaults to `false`.
+
+`WithClientIntelligence(level byte)`::
+Sets the client intelligence level.
+See <<client-intelligence>> for details.
+
+`WithLogger(l *slog.Logger)`::
+Sets a custom structured logger.
+Defaults to `slog.Default()`.
+
+[source,go]
+----
+client, err := hotrod.NewClient(ctx, "hotrod://admin:password@localhost:11222",
+	hotrod.WithClientIntelligence(hotrod.IntelligenceTopologyAware),
+	hotrod.WithConnectTimeout(5*time.Second),
+	hotrod.WithSocketTimeout(10*time.Second),
+)
+----
+
+You can also set these options through URI query parameters:
+
+[source]
+----
+hotrod://admin:password@localhost:11222?connect_timeout=5s&socket_timeout=10s&tcp_no_delay=true&tcp_keep_alive=false
+----

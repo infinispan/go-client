@@ -1,0 +1,147 @@
+== Cache Operations
+
+=== Basic Operations
+
+Cache operations use `[]byte` keys and values.
+Call `client.Cache("name")` to obtain a `RemoteCache` handle, then use `Put`, `Get`, and `Remove`:
+
+[source,go]
+----
+cache := client.Cache("my-cache")
+
+// Store an entry.
+err := cache.Put(ctx, []byte("key"), []byte("value"))
+
+// Retrieve an entry.
+val, found, err := cache.Get(ctx, []byte("key"))
+
+// Delete an entry.
+err = cache.Remove(ctx, []byte("key"))
+----
+
+Use `GetAndPut` and `GetAndRemove` to obtain the previous value in a single round-trip:
+
+[source,go]
+----
+// Store and get the previous value.
+prev, err := cache.GetAndPut(ctx, []byte("key"), []byte("new-value"))
+
+// Remove and get the previous value.
+prev, existed, err := cache.GetAndRemove(ctx, []byte("key"))
+----
+
+Additional conditional operations are available:
+
+`PutIfAbsent(ctx, key, value)`::
+Stores the entry only if the key does not already exist.
+Returns `true` if stored, `false` if the key was already present.
+
+`Replace(ctx, key, value)`::
+Replaces the value only if the key already exists.
+Returns `true` if replaced, `false` if the key was not found.
+
+`ContainsKey(ctx, key)`::
+Returns `true` if the cache contains an entry for the given key.
+
+`Clear(ctx)`::
+Removes all entries from the cache.
+
+`Size(ctx)`::
+Returns the number of entries in the cache.
+
+`Stats(ctx)`::
+Returns a map of server-side cache statistics such as `timeSinceStart` and `currentNumberOfEntries`.
+
+=== Versioned and Metadata Operations
+
+Use `GetWithMetadata` to retrieve the value along with server-side metadata (version, creation time, lifespan, last-used time, and max idle time):
+
+[source,go]
+----
+mv, found, err := cache.GetWithMetadata(ctx, []byte("key"))
+if found {
+	fmt.Printf("value=%s version=%d created=%d lifespan=%d\n",
+		mv.Value, mv.Version, mv.Created, mv.Lifespan)
+}
+----
+
+Use the version for optimistic locking with `ReplaceIfUnmodified` and `RemoveIfUnmodified`:
+
+[source,go]
+----
+ok, err := cache.ReplaceIfUnmodified(ctx, []byte("key"), []byte("new"), mv.Version)
+ok, err = cache.RemoveIfUnmodified(ctx, []byte("key"), mv.Version)
+----
+
+=== Bulk Operations
+
+`PutAll` stores multiple entries in a single operation.
+When the client is hash-distribution-aware, entries are grouped by owner and dispatched in parallel:
+
+[source,go]
+----
+entries := map[string][]byte{
+	"key1": []byte("val1"),
+	"key2": []byte("val2"),
+}
+err := cache.PutAll(ctx, entries)
+----
+
+`GetAll` retrieves multiple keys in a single operation:
+
+[source,go]
+----
+result, err := cache.GetAll(ctx, []string{"key1", "key2"})
+----
+
+=== Expiration
+
+Use `WithLifespan` and `WithMaxIdle` to control entry expiration:
+
+`WithLifespan(d time.Duration)`::
+Sets the maximum time an entry can live in the cache before expiring, regardless of access.
+
+`WithMaxIdle(d time.Duration)`::
+Sets the maximum idle time.
+The entry expires if it is not accessed within this duration.
+
+[source,go]
+----
+cache.Put(ctx, []byte("key"), []byte("value"),
+	hotrod.WithLifespan(30*time.Second),
+	hotrod.WithMaxIdle(10*time.Second),
+)
+----
+
+Both options apply to `Put`, `PutIfAbsent`, `Replace`, `PutAll`, and `ReplaceIfUnmodified`.
+
+=== Operation Flags
+
+Operation flags modify server-side behavior for individual operations.
+Pass them with `WithPutFlag`, `WithGetFlag`, or `WithRemoveFlag`:
+
+`FlagForceReturnValue`::
+Forces the server to return the previous value.
+This flag is set automatically by `GetAndPut` and `GetAndRemove`.
+
+`FlagDefaultLifespan`::
+Uses the cache's default lifespan instead of the value specified in the operation.
+
+`FlagDefaultMaxIdle`::
+Uses the cache's default max idle time instead of the value specified in the operation.
+
+`FlagSkipCacheLoad`::
+Skips loading the entry from a cache store (persistence).
+
+`FlagSkipIndexing`::
+Skips indexing the entry.
+
+`FlagSkipListenerNotification`::
+Skips notifying cache listeners about the operation.
+
+[source,go]
+----
+cache.Put(ctx, []byte("key"), []byte("value"),
+	hotrod.WithPutFlag(hotrod.FlagSkipListenerNotification),
+)
+----

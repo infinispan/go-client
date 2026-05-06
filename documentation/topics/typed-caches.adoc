@@ -1,0 +1,65 @@
+== Typed Caches with Protocol Buffers
+
+=== Schema Registration
+
+Before using typed caches with Protocol Buffers, register your `.proto` schemas with the server using the `SchemaManager`:
+
+[source,go]
+----
+schemas := client.Schemas()
+
+err := schemas.Register(ctx, "person.proto", `
+syntax = "proto3";
+package example;
+
+message Person {
+    string name = 1;
+    int32 age = 2;
+}
+`)
+----
+
+Retrieve a previously registered schema with `Get`:
+
+[source,go]
+----
+content, found, err := schemas.Get(ctx, "person.proto")
+----
+
+=== Creating a Typed Cache
+
+Use `NewTypedCache` with a `ProtoStreamMarshaller` to work with Go types instead of raw bytes.
+The marshaller handles serialization to and from the ProtoStream format that the Infinispan server expects.
+
+[source,go]
+----
+marshaller := hotrod.NewProtoStreamMarshaller("example.Person")
+
+cache := hotrod.NewTypedCache[string, *Person](
+	client, "people", marshaller,
+	func() *Person { return &Person{} },
+)
+
+err := cache.Put(ctx, "john", &Person{Name: "John", Age: 30})
+
+person, found, err := cache.Get(ctx, "john")
+----
+
+The fourth argument is a factory function that creates a new zero-value instance of the value type for unmarshalling.
+
+=== Custom Marshaller Interface
+
+You can implement the `Marshaller` interface to use a custom serialization format:
+
+[source,go]
+----
+type Marshaller interface {
+	MarshalKey(key any) ([]byte, error)
+	UnmarshalKey(data []byte, target any) error
+	MarshalValue(value any) ([]byte, error)
+	UnmarshalValue(data []byte, target any) error
+	MediaType() int32
+}
+----
+
+The `MediaType()` method returns the media type identifier sent to the server so it can interpret the encoded bytes correctly.

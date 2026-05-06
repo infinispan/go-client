@@ -1,0 +1,30 @@
+== Cache Administration
+
+The `CacheAdmin` API provides cache lifecycle operations.
+These operations are executed as server tasks through the Hot Rod `Exec` operation.
+
+[source,go]
+----
+admin := client.Administration()
+
+// Create a cache with XML configuration.
+err := admin.CreateCache(ctx, "my-cache", `<local-cache/>`)
+
+// Create a cache only if it does not already exist.
+err = admin.GetOrCreateCache(ctx, "my-cache", `<local-cache/>`)
+
+// Remove a cache and all its data.
+err = admin.RemoveCache(ctx, "my-cache")
+----
+
+Use `CreateCacheWithFlags` to pass admin flags that control creation behavior:
+
+* `AdminFlagPermanent` -- The cache configuration survives server restarts.
+* `AdminFlagVolatile` -- The cache configuration is not persisted.
+
+[source,go]
+----
+err := admin.CreateCacheWithFlags(ctx, "my-cache", `<local-cache/>`,
+	hotrod.AdminFlagPermanent,
+)
+----

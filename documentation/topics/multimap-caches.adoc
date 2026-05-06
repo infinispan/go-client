@@ -1,0 +1,100 @@
+== Multimap Caches
+
+A multimap cache allows multiple values to be associated with a single key.
+Call `client.Multimap("name")` to obtain a `MultimapCache` handle.
+
+=== Creating a Multimap Handle
+
+[source,go]
+----
+mm := client.Multimap("my-multimap")
+----
+
+By default, duplicate key-value pairs are not allowed.
+Use `WithSupportsDuplicates` to permit storing the same value multiple times under the same key:
+
+[source,go]
+----
+mm := client.Multimap("my-multimap",
+	hotrod.WithSupportsDuplicates(true),
+)
+----
+
+=== Storing and Retrieving Values
+
+Use `Put` to add one or more values under a key.
+Each value is stored as a separate entry:
+
+[source,go]
+----
+err := mm.Put(ctx, []byte("colors"), []byte("red"), []byte("blue"), []byte("green"))
+----
+
+Use `Get` to retrieve all values for a key:
+
+[source,go]
+----
+values, err := mm.Get(ctx, []byte("colors"))
+for _, v := range values {
+	fmt.Println(string(v))
+}
+----
+
+Use `PutWithOptions` to add values with expiration settings:
+
+[source,go]
+----
+err := mm.PutWithOptions(ctx, []byte("colors"),
+	[][]byte{[]byte("red"), []byte("blue")},
+	[]hotrod.PutOption{hotrod.WithLifespan(30 * time.Second)},
+)
+----
+
+=== Metadata
+
+Use `GetWithMetadata` to retrieve values along with server-side metadata:
+
+[source,go]
+----
+coll, found, err := mm.GetWithMetadata(ctx, []byte("colors"))
+if found {
+	fmt.Printf("values=%d version=%d\n", len(coll.Values), coll.Version)
+}
+----
+
+=== Removing Entries
+
+`RemoveKey(ctx, key)`::
+Removes all values associated with a key.
+Returns `true` if the key existed.
+
+`RemoveEntry(ctx, key, value)`::
+Removes a specific key-value pair.
+Returns `true` if the pair existed.
+
+[source,go]
+----
+removed, err := mm.RemoveKey(ctx, []byte("colors"))
+removed, err = mm.RemoveEntry(ctx, []byte("colors"), []byte("red"))
+----
+
+=== Checking Contents
+
+`ContainsKey(ctx, key)`::
+Reports whether the multimap contains any values for the given key.
+
+`ContainsValue(ctx, value)`::
+Reports whether the multimap contains the given value under any key.
+
+`ContainsEntry(ctx, key, value)`::
+Reports whether the multimap contains the specific key-value pair.
+
+`Size(ctx)`::
+Returns the total number of key-value pairs across all keys.
+
+[source,go]
+----
+hasKey, err := mm.ContainsKey(ctx, []byte("colors"))
+hasEntry, err := mm.ContainsEntry(ctx, []byte("colors"), []byte("red"))
+total, err := mm.Size(ctx)
+----

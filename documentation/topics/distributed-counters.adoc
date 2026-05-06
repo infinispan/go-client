@@ -1,0 +1,94 @@
+== Distributed Counters
+
+The `CounterManager` API provides operations for managing distributed counters.
+Counters are cluster-wide and not associated with any specific cache.
+
+=== Counter Types
+
+* **Strong** (`CounterStrong`) -- Supports all operations including compare-and-swap and get-and-set.
+* **Weak** (`CounterWeak`) -- Optimized for high write throughput. Does not support compare-and-swap or get-and-set.
+
+=== Counter Storage
+
+* **Volatile** (`StorageVolatile`) -- The counter value is lost on server restart.
+* **Persistent** (`StoragePersistent`) -- The counter value survives server restarts.
+
+=== Defining Counters
+
+[source,go]
+----
+counters := client.Counters()
+
+created, err := counters.Define(ctx, "my-counter", &hotrod.CounterConfiguration{
+	Type:         hotrod.CounterStrong,
+	Storage:      hotrod.StoragePersistent,
+	Bounded:      true,
+	LowerBound:   0,
+	UpperBound:   1000,
+	InitialValue: 0,
+})
+----
+
+=== Managing Counters
+
+[source,go]
+----
+// List all counter names.
+names, err := counters.Names(ctx)
+
+// Check if a counter exists.
+exists, err := counters.IsDefined(ctx, "my-counter")
+
+// Get the configuration of a counter.
+config, err := counters.GetConfiguration(ctx, "my-counter")
+
+// Remove a counter. It is re-created if accessed again.
+err = counters.Remove(ctx, "my-counter")
+----
+
+=== Counter Operations
+
+Obtain a `Counter` handle to perform operations on a specific counter:
+
+[source,go]
+----
+counter := counters.Counter("my-counter")
+
+// Get the current value.
+val, err := counter.Get(ctx)
+
+// Add a delta and get the new value.
+newVal, err := counter.AddAndGet(ctx, 5)
+
+// Set a new value and get the previous value.
+prev, err := counter.GetAndSet(ctx, 100)
+
+// Atomic compare-and-swap.
+oldVal, swapped, err := counter.CompareAndSwap(ctx, 100, 200)
+
+// Reset to the initial value.
+err = counter.Reset(ctx)
+----
+
+=== Counter Listeners
+
+You can register listeners to receive notifications when a counter value changes:
+
+[source,go]
+----
+listener, err := counter.AddListener(ctx)
+if err != nil {
+	log.Fatal(err)
+}
+defer counter.RemoveListener(ctx, listener)
+
+for event := range listener.Events {
+	fmt.Printf("counter=%s old=%d new=%d\n", event.Name, event.OldValue, event.NewValue)
+}
+----
+
+Each `CounterEvent` contains:
+
+* `Name` -- The counter name.
+* `OldValue` and `NewValue` -- The previous and current counter values.
+* `OldState` and `NewState` -- The previous and current counter states (`CounterStateValid`, `CounterStateLowerBound`, or `CounterStateUpperBound`).

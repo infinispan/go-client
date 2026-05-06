@@ -1,0 +1,45 @@
+*# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of `go cover`
+*.out
+*.coverprofile
+
+# Go workspace
+go.work
+go.work.sum
+
+# Dependency directory
+vendor/
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Debug binaries
+__debug_bin*
+
+# Air live reload
+tmp/
+
+# Build output
+bin/
+dist/
+
+# Generated docs
+_site/
+_site.zip
+_docs/
+docs.zip
+*.html

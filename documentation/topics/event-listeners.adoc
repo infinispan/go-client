@@ -1,0 +1,47 @@
+== Event Listeners
+
+=== Cache Entry Events
+
+You can register listeners to receive notifications when cache entries are created, modified, removed, or expired.
+Call `AddListener` on a `RemoteCache` to register a listener:
+
+[source,go]
+----
+listener, err := cache.AddListener(ctx)
+if err != nil {
+	log.Fatal(err)
+}
+defer cache.RemoveListener(ctx, listener)
+
+for event := range listener.Events {
+	fmt.Printf("type=%d key=%s\n", event.Type, event.Key)
+}
+----
+
+The `Events` channel delivers `CacheEntryEvent` values with the following fields:
+
+* `Type` -- The event type: `EventCreated`, `EventModified`, `EventRemoved`, or `EventExpired`.
+* `Key` -- The key of the affected entry.
+* `IsRetried` -- Whether this is a retried event delivery.
+
+=== Listener Options
+
+`WithListenerInterests(types ...EventType)`::
+Restricts the listener to only the specified event types.
+By default, all event types are delivered.
+
+`WithIncludeCurrentState()`::
+Causes the listener to receive synthetic events for all existing entries upon registration.
+This is useful for building an initial snapshot of the cache state.
+
+`WithChannelSize(n int)`::
+Sets the buffer size of the event channel.
+Defaults to 64.
+
+[source,go]
+----
+listener, err := cache.AddListener(ctx,
+	hotrod.WithListenerInterests(hotrod.EventCreated, hotrod.EventRemoved),
+	hotrod.WithChannelSize(128),
+)
+----

@@ -1,0 +1,24 @@
+== Building and Testing
+
+=== Building
+
+[source,shell]
+----
+go build ./...
+----
+
+=== Unit Tests
+
+[source,shell]
+----
+go test -short ./...
+----
+
+=== Integration Tests
+
+Integration tests require Docker for https://golang.testcontainers.org/[testcontainers]:
+
+[source,shell]
+----
+go test -timeout 120s ./test/...
+----

@@ -1,0 +1,46 @@
+== Iteration
+
+You can iterate over all entries in a cache using the `Iterator` method.
+The iterator fetches entries in batches from the server.
+
+[source,go]
+----
+iter, err := cache.Iterator(ctx)
+if err != nil {
+	log.Fatal(err)
+}
+defer iter.Close()
+
+for iter.Next() {
+	key, value := iter.Entry()
+	fmt.Printf("key=%s value=%s\n", key, value)
+}
+if err := iter.Err(); err != nil {
+	log.Fatal(err)
+}
+----
+
+=== Iterator Options
+
+`WithIteratorBatchSize(n int)`::
+Sets the number of entries fetched per server round-trip.
+Defaults to 1000.
+
+`WithIteratorMetadata()`::
+Requests that the server include entry metadata (creation time, lifespan, version) with each entry.
+
+[source,go]
+----
+iter, err := cache.Iterator(ctx,
+	hotrod.WithIteratorBatchSize(500),
+	hotrod.WithIteratorMetadata(),
+)
+
+for iter.Next() {
+	key, value := iter.Entry()
+	md := iter.Metadata()
+	if md != nil {
+		fmt.Printf("key=%s version=%d created=%d\n", key, md.Version, md.Created)
+	}
+}
+----
