@@ -402,7 +402,7 @@ func startInfinispanTLS(t *testing.T, certs *tlsCerts, mtls bool) (string, testc
 	if err != nil {
 		t.Fatalf("start infinispan TLS: %v", err)
 	}
-	t.Cleanup(func() { container.Terminate(ctx) })
+	t.Cleanup(func() { _ = container.Terminate(ctx) })
 
 	host, err := container.Host(ctx)
 	if err != nil {
@@ -616,7 +616,7 @@ func startInfinispanExternal(t *testing.T, certs *tlsCerts) (string, testcontain
 	if err != nil {
 		t.Fatalf("start infinispan EXTERNAL: %v", err)
 	}
-	t.Cleanup(func() { container.Terminate(ctx) })
+	t.Cleanup(func() { _ = container.Terminate(ctx) })
 
 	host, err := container.Host(ctx)
 	if err != nil {

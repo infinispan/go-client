@@ -149,11 +149,11 @@ func DecodeCounterEventBody(r io.Reader) (*CounterEvent, []byte, error) {
 }
 
 func SkipCounterEventBody(r io.Reader) {
-	codec.ReadLPString(r)
-	codec.ReadLPBytes(r)
-	codec.ReadU1(r)
-	codec.ReadLong(r)
-	codec.ReadLong(r)
+	_, _ = codec.ReadLPString(r)
+	_, _ = codec.ReadLPBytes(r)
+	_, _ = codec.ReadU1(r)
+	_, _ = codec.ReadLong(r)
+	_, _ = codec.ReadLong(r)
 }
 
 // --- CounterCreateOp ---

@@ -118,9 +118,8 @@ func (p *Pool) Execute(ctx context.Context, op operation.Operation) (any, error)
 
 func (p *Pool) routeOperation(op operation.Operation) string {
 	if keyed, ok := op.(operation.KeyedOperation); ok {
-		cacheName := string(op.CacheName())
 		p.mu.RLock()
-		ch := p.consistentHashes[cacheName]
+		ch := p.consistentHashes[string(op.CacheName())]
 		p.mu.RUnlock()
 		if ch != nil {
 			if addr := ch.GetPrimaryOwner(keyed.KeyBytes()); addr != "" {
@@ -172,7 +171,7 @@ func (p *Pool) dialAndSetup(ctx context.Context, addr string) (*Conn, error) {
 		return nil, fmt.Errorf("dial %s: %w", addr, err)
 	}
 	if tc, ok := rawConn.(*net.TCPConn); ok {
-		tc.SetNoDelay(p.tcpNoDelay)
+		_ = tc.SetNoDelay(p.tcpNoDelay)
 	}
 
 	var netConn net.Conn = rawConn

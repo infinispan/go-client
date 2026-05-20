@@ -83,7 +83,7 @@ func TestNearCache_PutInvalidatesLocal(t *testing.T) {
 	if err := nc.Put(ctx, []byte("k1"), []byte("v1")); err != nil {
 		t.Fatalf("Put v1: %v", err)
 	}
-	nc.Get(ctx, []byte("k1"))
+	_, _, _ = nc.Get(ctx, []byte("k1"))
 
 	// Put new value — should invalidate local cache
 	if err := nc.Put(ctx, []byte("k1"), []byte("v2")); err != nil {
@@ -195,7 +195,7 @@ func TestNearCache_RemoveInvalidatesLocal(t *testing.T) {
 	if err := nc.Put(ctx, []byte("k1"), []byte("v1")); err != nil {
 		t.Fatalf("Put: %v", err)
 	}
-	nc.Get(ctx, []byte("k1"))
+	_, _, _ = nc.Get(ctx, []byte("k1"))
 
 	// Remove
 	if err := nc.Remove(ctx, []byte("k1")); err != nil {

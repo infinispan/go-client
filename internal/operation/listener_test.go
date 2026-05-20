@@ -9,10 +9,10 @@ import (
 
 func encodeCreatedEvent(listenerID, key []byte, version int64) []byte {
 	var buf bytes.Buffer
-	codec.WriteLPBytes(&buf, listenerID)
-	codec.WriteU1(&buf, 0) // not custom
-	codec.WriteU1(&buf, 0) // not retried
-	codec.WriteLPBytes(&buf, key)
+	_ = codec.WriteLPBytes(&buf, listenerID)
+	_ = codec.WriteU1(&buf, 0) // not custom
+	_ = codec.WriteU1(&buf, 0) // not retried
+	_ = codec.WriteLPBytes(&buf, key)
 	b := make([]byte, 8)
 	for i := 7; i >= 0; i-- {
 		b[i] = byte(version)
@@ -24,10 +24,10 @@ func encodeCreatedEvent(listenerID, key []byte, version int64) []byte {
 
 func encodeRemovedEvent(listenerID, key []byte) []byte {
 	var buf bytes.Buffer
-	codec.WriteLPBytes(&buf, listenerID)
-	codec.WriteU1(&buf, 0) // not custom
-	codec.WriteU1(&buf, 0) // not retried
-	codec.WriteLPBytes(&buf, key)
+	_ = codec.WriteLPBytes(&buf, listenerID)
+	_ = codec.WriteU1(&buf, 0) // not custom
+	_ = codec.WriteU1(&buf, 0) // not retried
+	_ = codec.WriteLPBytes(&buf, key)
 	return buf.Bytes()
 }
 
@@ -114,10 +114,10 @@ func TestDecodeExpiredEvent(t *testing.T) {
 
 func TestDecodeCustomEvent(t *testing.T) {
 	var buf bytes.Buffer
-	codec.WriteLPBytes(&buf, []byte{1, 2})
-	codec.WriteU1(&buf, 1) // is_custom
-	codec.WriteU1(&buf, 0) // not retried
-	codec.WriteLPBytes(&buf, []byte("custom-data"))
+	_ = codec.WriteLPBytes(&buf, []byte{1, 2})
+	_ = codec.WriteU1(&buf, 1) // is_custom
+	_ = codec.WriteU1(&buf, 0) // not retried
+	_ = codec.WriteLPBytes(&buf, []byte("custom-data"))
 
 	decoded, err := DecodeEvent(codec.OpCacheEntryCreated, bytes.NewReader(buf.Bytes()))
 	if err != nil {
@@ -227,7 +227,7 @@ func TestAddClientListenerOpEncodeWithFactory(t *testing.T) {
 	r := bytes.NewReader(buf.Bytes())
 
 	// listener ID
-	codec.ReadLPBytes(r)
+	_, _ = codec.ReadLPBytes(r)
 	// include state
 	state, _ := codec.ReadU1(r)
 	if state != 1 {

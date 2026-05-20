@@ -91,7 +91,7 @@ func waitForTopologyServers(t *testing.T, client *hotrod.Client, ctx context.Con
 		for j := 0; j < 5; j++ {
 			key := fmt.Sprintf("topo-probe-%d", probe)
 			probe++
-			cache.Put(ctx, []byte(key), []byte("x"))
+			_ = cache.Put(ctx, []byte(key), []byte("x"))
 		}
 
 		servers := client.TopologyServers()
@@ -117,12 +117,12 @@ func TestTopologyScaleUpAndDown(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create network: %v", err)
 	}
-	t.Cleanup(func() { nw.Remove(ctx) })
+	t.Cleanup(func() { _ = nw.Remove(ctx) })
 
 	// Start the first node
 	t.Log("--- Starting node 1 ---")
 	node1 := startClusterNode(t, ctx, nw, "ispn-node1")
-	t.Cleanup(func() { node1.Terminate(ctx) })
+	t.Cleanup(func() { _ = node1.Terminate(ctx) })
 
 	addr1 := nodeAddr(t, ctx, node1)
 	t.Logf("node1 address: %s", addr1)
@@ -159,7 +159,7 @@ func TestTopologyScaleUpAndDown(t *testing.T) {
 	// --- Scale up: add node2 ---
 	t.Log("--- Starting node 2 ---")
 	node2 := startClusterNode(t, ctx, nw, "ispn-node2")
-	t.Cleanup(func() { node2.Terminate(ctx) })
+	t.Cleanup(func() { _ = node2.Terminate(ctx) })
 
 	addr2 := nodeAddr(t, ctx, node2)
 	t.Logf("node2 address: %s", addr2)
@@ -206,7 +206,7 @@ func TestTopologyScaleUpAndDown(t *testing.T) {
 	// --- Scale up: add node3 ---
 	t.Log("--- Starting node 3 ---")
 	node3 := startClusterNode(t, ctx, nw, "ispn-node3")
-	t.Cleanup(func() { node3.Terminate(ctx) })
+	t.Cleanup(func() { _ = node3.Terminate(ctx) })
 
 	addr3 := nodeAddr(t, ctx, node3)
 	t.Logf("node3 address: %s", addr3)

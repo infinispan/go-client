@@ -29,6 +29,7 @@ func TestGetWithVersion(t *testing.T) {
 	cache := client.Cache("cas-gwv")
 
 	// Missing key returns not-found.
+	//nolint:staticcheck // Testing deprecated GetWithVersion method
 	vv, found, err := cache.GetWithVersion(ctx, []byte("missing"))
 	if err != nil {
 		t.Fatalf("GetWithVersion missing: %v", err)
@@ -45,6 +46,7 @@ func TestGetWithVersion(t *testing.T) {
 		t.Fatalf("Put: %v", err)
 	}
 
+	//nolint:staticcheck // Testing deprecated GetWithVersion method
 	vv, found, err = cache.GetWithVersion(ctx, []byte("k1"))
 	if err != nil {
 		t.Fatalf("GetWithVersion: %v", err)
@@ -64,6 +66,7 @@ func TestGetWithVersion(t *testing.T) {
 		t.Fatalf("Put update: %v", err)
 	}
 
+	//nolint:staticcheck // Testing deprecated GetWithVersion method
 	vv2, found, err := cache.GetWithVersion(ctx, []byte("k1"))
 	if err != nil {
 		t.Fatalf("GetWithVersion after update: %v", err)
@@ -103,6 +106,7 @@ func TestReplaceIfUnmodified(t *testing.T) {
 		t.Fatalf("Put: %v", err)
 	}
 
+	//nolint:staticcheck // Testing deprecated GetWithVersion method
 	vv, _, err := cache.GetWithVersion(ctx, []byte("k1"))
 	if err != nil {
 		t.Fatalf("GetWithVersion: %v", err)
@@ -171,6 +175,7 @@ func TestReplaceIfUnmodified_WithExpiry(t *testing.T) {
 		t.Fatalf("Put: %v", err)
 	}
 
+	//nolint:staticcheck // Testing deprecated GetWithVersion method
 	vv, _, err := cache.GetWithVersion(ctx, []byte("k1"))
 	if err != nil {
 		t.Fatalf("GetWithVersion: %v", err)
@@ -220,6 +225,7 @@ func TestRemoveIfUnmodified(t *testing.T) {
 		t.Fatalf("Put: %v", err)
 	}
 
+	//nolint:staticcheck // Testing deprecated GetWithVersion method
 	vv, _, err := cache.GetWithVersion(ctx, []byte("k1"))
 	if err != nil {
 		t.Fatalf("GetWithVersion: %v", err)
@@ -248,6 +254,7 @@ func TestRemoveIfUnmodified(t *testing.T) {
 		t.Fatal("expected key to still exist after failed remove")
 	}
 
+	//nolint:staticcheck // Testing deprecated GetWithVersion method
 	// Get the current version and remove with it.
 	vv2, _, err := cache.GetWithVersion(ctx, []byte("k1"))
 	if err != nil {

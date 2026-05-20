@@ -76,7 +76,7 @@ func TestContinuousQuery_JoiningAndLeaving(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ContinuousQuery: %v", err)
 	}
-	defer rawCache.RemoveContinuousQuery(ctx, cq)
+	defer func() { _ = rawCache.RemoveContinuousQuery(ctx, cq) }()
 
 	// Put a matching entry → expect JOINING
 	if err := cache.Put(ctx, "alice", &testproto.Person{Name: "Alice", Age: 25}); err != nil {
@@ -136,7 +136,7 @@ func TestContinuousQuery_NonMatchingEntryNoEvent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ContinuousQuery: %v", err)
 	}
-	defer rawCache.RemoveContinuousQuery(ctx, cq)
+	defer func() { _ = rawCache.RemoveContinuousQuery(ctx, cq) }()
 
 	// Put a non-matching entry → should NOT receive an event
 	if err := cache.Put(ctx, "child", &testproto.Person{Name: "Child", Age: 10}); err != nil {
@@ -176,7 +176,7 @@ func TestContinuousQuery_WithParam(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ContinuousQuery: %v", err)
 	}
-	defer rawCache.RemoveContinuousQuery(ctx, cq)
+	defer func() { _ = rawCache.RemoveContinuousQuery(ctx, cq) }()
 
 	// Put entry that doesn't match (age < 21)
 	if err := cache.Put(ctx, "teen", &testproto.Person{Name: "Teen", Age: 18}); err != nil {

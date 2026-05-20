@@ -130,7 +130,7 @@ func TestBuildTLSConfig_TrustStoreNotFound(t *testing.T) {
 func TestBuildTLSConfig_TrustStoreInvalidPEM(t *testing.T) {
 	dir := t.TempDir()
 	badFile := filepath.Join(dir, "bad.pem")
-	os.WriteFile(badFile, []byte("not a pem"), 0644)
+	_ = os.WriteFile(badFile, []byte("not a pem"), 0644)
 
 	parsed := &parsedURI{tls: true, trustStorePath: badFile}
 	cfg := &clientConfig{}
@@ -262,6 +262,7 @@ func TestBuildTLSConfig_AutoEnableTLS(t *testing.T) {
 	}
 	if tlsCfg == nil {
 		t.Fatal("expected TLS to be auto-enabled when trust store is set")
+		return
 	}
 	if tlsCfg.RootCAs == nil {
 		t.Error("expected RootCAs to be set")

@@ -130,6 +130,7 @@ func TestIterator_WithMetadata(t *testing.T) {
 	md := it.Metadata()
 	if md == nil {
 		t.Fatal("expected metadata to be non-nil")
+		return
 	}
 	if md.Version == 0 {
 		t.Error("expected non-zero version")

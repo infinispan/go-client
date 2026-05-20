@@ -53,13 +53,13 @@ func TestMain(m *testing.M) {
 
 	host, err := container.Host(ctx)
 	if err != nil {
-		container.Terminate(context.Background())
+		_ = container.Terminate(context.Background())
 		fmt.Fprintf(os.Stderr, "get host: %v\n", err)
 		os.Exit(1)
 	}
 	port, err := container.MappedPort(ctx, "11222")
 	if err != nil {
-		container.Terminate(context.Background())
+		_ = container.Terminate(context.Background())
 		fmt.Fprintf(os.Stderr, "get port: %v\n", err)
 		os.Exit(1)
 	}
@@ -68,6 +68,6 @@ func TestMain(m *testing.M) {
 	sharedAddr = fmt.Sprintf("%s:%s", host, port.Port())
 
 	code := m.Run()
-	container.Terminate(context.Background())
+	_ = container.Terminate(context.Background())
 	os.Exit(code)
 }

@@ -370,6 +370,7 @@ func TestCounter_NameAndConfiguration(t *testing.T) {
 	}
 	if retrievedCfg == nil {
 		t.Fatal("expected configuration to be returned")
+		return
 	}
 
 	// Verify configuration
@@ -581,7 +582,7 @@ func TestCounter_Listener(t *testing.T) {
 	if err != nil {
 		t.Fatalf("AddListener: %v", err)
 	}
-	defer counter.RemoveListener(ctx, listener)
+	defer func() { _ = counter.RemoveListener(ctx, listener) }()
 
 	// Modify counter and expect events
 	_, err = counter.AddAndGet(ctx, 5)
@@ -594,6 +595,7 @@ func TestCounter_Listener(t *testing.T) {
 	case event := <-listener.Events:
 		if event == nil {
 			t.Fatal("received nil event")
+			return
 		}
 		// Event received successfully
 		t.Logf("Received counter event: old=%d, new=%d, oldState=%v, newState=%v",

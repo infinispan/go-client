@@ -46,7 +46,7 @@ func startInfinispan(t *testing.T) (string, testcontainers.Container) {
 		t.Fatalf("start infinispan: %v", err)
 	}
 	t.Cleanup(func() {
-		container.Terminate(ctx)
+		_ = container.Terminate(ctx)
 	})
 	host, err := container.Host(ctx)
 	if err != nil {

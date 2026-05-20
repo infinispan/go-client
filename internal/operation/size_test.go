@@ -9,7 +9,7 @@ import (
 
 func TestSizeOpDecodeResponse(t *testing.T) {
 	var buf bytes.Buffer
-	codec.WriteVInt(&buf, 42)
+	_ = codec.WriteVInt(&buf, 42)
 
 	result, err := (&SizeOp{}).DecodeResponse(codec.StatusSuccess, bytes.NewReader(buf.Bytes()))
 	if err != nil {
@@ -23,7 +23,7 @@ func TestSizeOpDecodeResponse(t *testing.T) {
 
 func TestSizeOpDecodeZero(t *testing.T) {
 	var buf bytes.Buffer
-	codec.WriteVInt(&buf, 0)
+	_ = codec.WriteVInt(&buf, 0)
 
 	result, err := (&SizeOp{}).DecodeResponse(codec.StatusSuccess, bytes.NewReader(buf.Bytes()))
 	if err != nil {

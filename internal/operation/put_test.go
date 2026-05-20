@@ -24,7 +24,7 @@ func TestPutOpFlagsDefault(t *testing.T) {
 func writeMetadataValue(buf *bytes.Buffer, value []byte) {
 	buf.WriteByte(0x03) // flags: both lifespan and maxidle infinite
 	buf.Write([]byte{0, 0, 0, 0, 0, 0, 0, 1}) // version = 1
-	codec.WriteLPBytes(buf, value)
+	_ = codec.WriteLPBytes(buf, value)
 }
 
 func TestPutOpDecodeSuccessWithPrevious(t *testing.T) {

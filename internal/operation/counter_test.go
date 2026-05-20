@@ -9,7 +9,7 @@ import (
 
 func TestCounterGetDecodeResponse(t *testing.T) {
 	var buf bytes.Buffer
-	codec.WriteLong(&buf, 99)
+	_ = codec.WriteLong(&buf, 99)
 
 	result, err := (&CounterGetOp{Name: "c1"}).DecodeResponse(codec.StatusSuccess, bytes.NewReader(buf.Bytes()))
 	if err != nil {
@@ -33,7 +33,7 @@ func TestCounterGetDecodeNotDefined(t *testing.T) {
 
 func TestCounterAddAndGetDecodeResponse(t *testing.T) {
 	var buf bytes.Buffer
-	codec.WriteLong(&buf, 42)
+	_ = codec.WriteLong(&buf, 42)
 
 	result, err := (&CounterAddAndGetOp{Name: "c1", Delta: 10}).DecodeResponse(codec.StatusSuccess, bytes.NewReader(buf.Bytes()))
 	if err != nil {
@@ -47,7 +47,7 @@ func TestCounterAddAndGetDecodeResponse(t *testing.T) {
 
 func TestCounterGetAndSetDecodeResponse(t *testing.T) {
 	var buf bytes.Buffer
-	codec.WriteLong(&buf, 7)
+	_ = codec.WriteLong(&buf, 7)
 
 	result, err := (&CounterGetAndSetOp{Name: "c1", Value: 100}).DecodeResponse(codec.StatusSuccess, bytes.NewReader(buf.Bytes()))
 	if err != nil {
@@ -61,7 +61,7 @@ func TestCounterGetAndSetDecodeResponse(t *testing.T) {
 
 func TestCounterCasDecodeSuccess(t *testing.T) {
 	var buf bytes.Buffer
-	codec.WriteLong(&buf, 10)
+	_ = codec.WriteLong(&buf, 10)
 
 	result, err := (&CounterCasOp{Name: "c1", Expect: 10, Update: 20}).DecodeResponse(codec.StatusSuccess, bytes.NewReader(buf.Bytes()))
 	if err != nil {
@@ -78,7 +78,7 @@ func TestCounterCasDecodeSuccess(t *testing.T) {
 
 func TestCounterCasDecodeFailure(t *testing.T) {
 	var buf bytes.Buffer
-	codec.WriteLong(&buf, 5)
+	_ = codec.WriteLong(&buf, 5)
 
 	result, err := (&CounterCasOp{Name: "c1", Expect: 10, Update: 20}).DecodeResponse(codec.StatusSuccess, bytes.NewReader(buf.Bytes()))
 	if err != nil {
@@ -136,11 +136,11 @@ func TestCounterIsDefinedDecodeFalse(t *testing.T) {
 func TestCounterGetConfigurationDecode(t *testing.T) {
 	var buf bytes.Buffer
 	// flags: strong(0) | bounded(0x02) | persistent(0x04) = 0x06
-	codec.WriteU1(&buf, 0x06)
+	_ = codec.WriteU1(&buf, 0x06)
 	// no ConcurrencyLevel (strong counter)
-	codec.WriteLong(&buf, -100) // LowerBound
-	codec.WriteLong(&buf, 100)  // UpperBound
-	codec.WriteLong(&buf, 0)    // InitialValue
+	_ = codec.WriteLong(&buf, -100) // LowerBound
+	_ = codec.WriteLong(&buf, 100)  // UpperBound
+	_ = codec.WriteLong(&buf, 0)    // InitialValue
 
 	result, err := (&CounterGetConfigurationOp{Name: "c1"}).DecodeResponse(codec.StatusSuccess, bytes.NewReader(buf.Bytes()))
 	if err != nil {
@@ -170,9 +170,9 @@ func TestCounterGetConfigurationDecode(t *testing.T) {
 func TestCounterGetConfigurationDecodeWeak(t *testing.T) {
 	var buf bytes.Buffer
 	// flags: weak(0x01) | volatile(0) = 0x01
-	codec.WriteU1(&buf, 0x01)
-	codec.WriteVInt(&buf, 16) // ConcurrencyLevel
-	codec.WriteLong(&buf, 5) // InitialValue
+	_ = codec.WriteU1(&buf, 0x01)
+	_ = codec.WriteVInt(&buf, 16) // ConcurrencyLevel
+	_ = codec.WriteLong(&buf, 5) // InitialValue
 
 	result, err := (&CounterGetConfigurationOp{Name: "c1"}).DecodeResponse(codec.StatusSuccess, bytes.NewReader(buf.Bytes()))
 	if err != nil {
@@ -252,12 +252,12 @@ func TestCounterConfigurationRoundTrip(t *testing.T) {
 
 func TestDecodeCounterEventBody(t *testing.T) {
 	var buf bytes.Buffer
-	codec.WriteLPString(&buf, "myCounter")
-	codec.WriteLPBytes(&buf, []byte{0x01, 0x02, 0x03})
+	_ = codec.WriteLPString(&buf, "myCounter")
+	_ = codec.WriteLPBytes(&buf, []byte{0x01, 0x02, 0x03})
 	// state flags: oldState=0 (Valid), newState=2 (UpperBound) → (2<<2)|0 = 0x08
-	codec.WriteU1(&buf, 0x08)
-	codec.WriteLong(&buf, 99)  // oldValue
-	codec.WriteLong(&buf, 100) // newValue
+	_ = codec.WriteU1(&buf, 0x08)
+	_ = codec.WriteLong(&buf, 99)  // oldValue
+	_ = codec.WriteLong(&buf, 100) // newValue
 
 	ev, listenerID, err := DecodeCounterEventBody(bytes.NewReader(buf.Bytes()))
 	if err != nil {
@@ -315,10 +315,10 @@ func TestCounterRemoveDecodeResponseFailure(t *testing.T) {
 
 func TestCounterGetNamesDecodeResponse(t *testing.T) {
 	var buf bytes.Buffer
-	codec.WriteVInt(&buf, 3)
-	codec.WriteLPString(&buf, "counter-a")
-	codec.WriteLPString(&buf, "counter-b")
-	codec.WriteLPString(&buf, "counter-c")
+	_ = codec.WriteVInt(&buf, 3)
+	_ = codec.WriteLPString(&buf, "counter-a")
+	_ = codec.WriteLPString(&buf, "counter-b")
+	_ = codec.WriteLPString(&buf, "counter-c")
 
 	result, err := (&CounterGetNamesOp{}).DecodeResponse(codec.StatusSuccess, bytes.NewReader(buf.Bytes()))
 	if err != nil {
@@ -335,7 +335,7 @@ func TestCounterGetNamesDecodeResponse(t *testing.T) {
 
 func TestCounterGetNamesDecodeEmpty(t *testing.T) {
 	var buf bytes.Buffer
-	codec.WriteVInt(&buf, 0)
+	_ = codec.WriteVInt(&buf, 0)
 
 	result, err := (&CounterGetNamesOp{}).DecodeResponse(codec.StatusSuccess, bytes.NewReader(buf.Bytes()))
 	if err != nil {
