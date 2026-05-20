@@ -2,6 +2,7 @@ package hotrod_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -486,5 +487,165 @@ func TestExpiration_ContainsKey(t *testing.T) {
 	}
 	if exists {
 		t.Error("expected key not to exist after expiry")
+	}
+}
+
+func TestExpiration_CacheLevelDefaultLifespan(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
+	cacheName := uniqueCacheName(t, "expire-default-lifespan")
+
+	// Create cache with default lifespan of 3 seconds (maxIdle = -1 means no max idle)
+	createCacheWithExpiration(t, sharedContainer, cacheName, 3, -1)
+
+	uri := fmt.Sprintf("hotrod://admin:password@%s", sharedAddr)
+	connCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	client, err := hotrod.NewClient(connCtx, uri)
+	if err != nil {
+		t.Fatalf("NewClient: %v", err)
+	}
+	defer client.Close()
+
+	cache := client.Cache(cacheName)
+	ctx := context.Background()
+
+	// Put entry WITHOUT explicit expiration - should use cache default lifespan of 3s
+	err = cache.Put(ctx, []byte("key1"), []byte("value1"))
+	if err != nil {
+		t.Fatalf("Put: %v", err)
+	}
+
+	// Should exist immediately
+	val, found, err := cache.Get(ctx, []byte("key1"))
+	if err != nil {
+		t.Fatalf("Get before expiry: %v", err)
+	}
+	if !found {
+		t.Fatal("expected key to be found before expiry")
+	}
+	if string(val) != "value1" {
+		t.Errorf("got %q, want %q", string(val), "value1")
+	}
+
+	// Wait for cache default lifespan to expire (3 seconds + buffer)
+	time.Sleep(4 * time.Second)
+
+	// Should not exist after cache default lifespan
+	_, found, err = cache.Get(ctx, []byte("key1"))
+	if err != nil {
+		t.Fatalf("Get after expiry: %v", err)
+	}
+	if found {
+		t.Error("expected key not to be found after cache default lifespan")
+	}
+
+	// Test that explicit expiration overrides cache default
+	err = cache.Put(ctx, []byte("key2"), []byte("value2"), hotrod.WithLifespan(10*time.Second))
+	if err != nil {
+		t.Fatalf("Put with explicit lifespan: %v", err)
+	}
+
+	// After 4 seconds, key2 should still exist (has 10s lifespan)
+	time.Sleep(4 * time.Second)
+	val, found, err = cache.Get(ctx, []byte("key2"))
+	if err != nil {
+		t.Fatalf("Get key2: %v", err)
+	}
+	if !found {
+		t.Error("expected key2 to still exist (explicit lifespan overrides default)")
+	}
+	if string(val) != "value2" {
+		t.Errorf("got %q, want %q", string(val), "value2")
+	}
+}
+
+func TestExpiration_CacheLevelDefaultMaxIdle(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
+	cacheName := uniqueCacheName(t, "expire-default-maxidle")
+
+	// Create cache with default maxIdle of 3 seconds (lifespan = -1 means no lifespan)
+	createCacheWithExpiration(t, sharedContainer, cacheName, -1, 3)
+
+	uri := fmt.Sprintf("hotrod://admin:password@%s", sharedAddr)
+	connCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	client, err := hotrod.NewClient(connCtx, uri)
+	if err != nil {
+		t.Fatalf("NewClient: %v", err)
+	}
+	defer client.Close()
+
+	cache := client.Cache(cacheName)
+	ctx := context.Background()
+
+	// Put entry WITHOUT explicit expiration - should use cache default maxIdle of 3s
+	err = cache.Put(ctx, []byte("key1"), []byte("value1"))
+	if err != nil {
+		t.Fatalf("Put: %v", err)
+	}
+
+	// Access within idle time (at 1 second) - should reset maxIdle timer
+	time.Sleep(1 * time.Second)
+	val, found, err := cache.Get(ctx, []byte("key1"))
+	if err != nil {
+		t.Fatalf("Get within idle time: %v", err)
+	}
+	if !found {
+		t.Error("expected key to be found within idle time")
+	}
+	if string(val) != "value1" {
+		t.Errorf("got %q, want %q", string(val), "value1")
+	}
+
+	// Access again at 2 seconds from last access - should still exist and reset timer
+	time.Sleep(2 * time.Second)
+	val, found, err = cache.Get(ctx, []byte("key1"))
+	if err != nil {
+		t.Fatalf("Get within idle time (2): %v", err)
+	}
+	if !found {
+		t.Error("expected key to be found within idle time")
+	}
+	if string(val) != "value1" {
+		t.Errorf("got %q, want %q", string(val), "value1")
+	}
+
+	// Wait for cache default maxIdle timeout (4 seconds without access)
+	time.Sleep(4 * time.Second)
+
+	// Should not exist after idle timeout
+	_, found, err = cache.Get(ctx, []byte("key1"))
+	if err != nil {
+		t.Fatalf("Get after idle timeout: %v", err)
+	}
+	if found {
+		t.Error("expected key not to be found after cache default maxIdle timeout")
+	}
+
+	// Test that explicit maxIdle overrides cache default
+	err = cache.Put(ctx, []byte("key2"), []byte("value2"), hotrod.WithMaxIdle(10*time.Second))
+	if err != nil {
+		t.Fatalf("Put with explicit maxIdle: %v", err)
+	}
+
+	// After 4 seconds, key2 should still exist (has 10s maxIdle)
+	time.Sleep(4 * time.Second)
+	val, found, err = cache.Get(ctx, []byte("key2"))
+	if err != nil {
+		t.Fatalf("Get key2: %v", err)
+	}
+	if !found {
+		t.Error("expected key2 to still exist (explicit maxIdle overrides default)")
+	}
+	if string(val) != "value2" {
+		t.Errorf("got %q, want %q", string(val), "value2")
 	}
 }

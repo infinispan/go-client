@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -32,6 +33,47 @@ func createTestCache(t *testing.T, container testcontainers.Container, name stri
 	}
 	body, _ := io.ReadAll(output)
 	t.Logf("create cache output: %s", body)
+}
+
+// createTestCacheWithConfig creates a cache with custom XML configuration
+func createTestCacheWithConfig(t *testing.T, container testcontainers.Container, name, config string) {
+	t.Helper()
+	ctx := context.Background()
+
+	// Write config to a temporary file in the container
+	tmpFile := fmt.Sprintf("/tmp/%s.xml", name)
+	escapedConfig := strings.ReplaceAll(config, "'", "'\\''")
+
+	_, output, err := container.Exec(ctx, []string{
+		"bash", "-c",
+		fmt.Sprintf("echo '%s' > %s", escapedConfig, tmpFile),
+	})
+	if err != nil {
+		t.Fatalf("write config file: %v", err)
+	}
+	_, _ = io.ReadAll(output)
+
+	// Create cache from the file
+	cmd := fmt.Sprintf("create cache --file=%s %s", tmpFile, name)
+	_, output, err = container.Exec(ctx, []string{
+		"bash", "-c",
+		fmt.Sprintf("echo '%s' | /opt/infinispan/bin/cli.sh -c http://admin:password@localhost:11222", cmd),
+	})
+	if err != nil {
+		t.Fatalf("exec create cache with config: %v", err)
+	}
+	body, _ := io.ReadAll(output)
+	t.Logf("create cache output: %s", body)
+}
+
+// createCacheWithExpiration creates a cache with default expiration settings
+func createCacheWithExpiration(t *testing.T, container testcontainers.Container, name string, lifespanSeconds, maxIdleSeconds int64) {
+	t.Helper()
+	config := fmt.Sprintf(`<distributed-cache name="%s">
+  <encoding media-type="application/x-protostream"/>
+  <expiration lifespan="%d" max-idle="%d"/>
+</distributed-cache>`, name, lifespanSeconds*1000, maxIdleSeconds*1000)
+	createTestCacheWithConfig(t, container, name, config)
 }
 
 func TestEndToEnd(t *testing.T) {
