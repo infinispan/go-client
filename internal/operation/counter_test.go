@@ -298,8 +298,18 @@ func TestCounterRemoveDecodeResponse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result != nil {
-		t.Errorf("expected nil result for remove, got %v", result)
+	if result != true {
+		t.Errorf("expected true for successful remove, got %v", result)
+	}
+}
+
+func TestCounterRemoveDecodeResponseFailure(t *testing.T) {
+	result, err := (&CounterRemoveOp{Name: "c1"}).DecodeResponse(codec.StatusKeyDoesNotExist, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result != false {
+		t.Errorf("expected false for failed remove, got %v", result)
 	}
 }
 
