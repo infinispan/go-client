@@ -200,7 +200,7 @@ func SkipEventBody(opCode byte, r io.Reader) {
 		return
 	}
 	if isCustom != 0 {
-		codec.ReadLPBytes(r)
+		_, _ = codec.ReadLPBytes(r)
 		return
 	}
 	if _, err := codec.ReadLPBytes(r); err != nil {
@@ -214,7 +214,7 @@ func SkipEventBody(opCode byte, r io.Reader) {
 		evType = EventModified
 	}
 	if evType == EventCreated || evType == EventModified {
-		codec.ReadLong(r)
+		_, _ = codec.ReadLong(r)
 	}
 }
 

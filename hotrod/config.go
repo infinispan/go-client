@@ -62,10 +62,8 @@ func parseURI(rawURI string) (*parsedURI, error) {
 		result.password, _ = u.User.Password()
 	}
 
+	// net/url already parsed the user info out of Host
 	hostPart := u.Host
-	if u.User != nil {
-		// net/url already parsed the user info out of Host
-	}
 
 	hosts := strings.Split(hostPart, ",")
 	for _, h := range hosts {

@@ -93,12 +93,19 @@ func (cm *CounterManager) GetConfiguration(ctx context.Context, name string) (*C
 	return result.(*CounterConfiguration), nil
 }
 
-// Remove removes a counter from the cluster. The counter is re-created if accessed again.
+// Remove resets a counter to its initial value. The counter definition remains.
 func (cm *CounterManager) Remove(ctx context.Context, name string) error {
-	_, err := cm.client.pool.Execute(ctx, &operation.CounterRemoveOp{
+	result, err := cm.client.pool.Execute(ctx, &operation.CounterRemoveOp{
 		Name: name,
 	})
-	return err
+	if err != nil {
+		return err
+	}
+	// Check if reset was successful
+	if success, ok := result.(bool); !ok || !success {
+		return fmt.Errorf("failed to reset counter %q", name)
+	}
+	return nil
 }
 
 // Names returns the names of all counters defined in the cluster.

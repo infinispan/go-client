@@ -2,7 +2,6 @@ package hotrod_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -14,19 +13,11 @@ func TestPutAllGetAll_Basic(t *testing.T) {
 		t.Skip("skipping integration test")
 	}
 
-	createTestCache(t, sharedContainer, "bulk")
+	cacheName := uniqueCacheName(t, "bulk-basic")
+	cache, cleanup := setupCache(t, cacheName)
+	defer cleanup()
 
-	uri := fmt.Sprintf("hotrod://admin:password@%s", sharedAddr)
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	client, err := hotrod.NewClient(ctx, uri)
-	if err != nil {
-		t.Fatalf("NewClient: %v", err)
-	}
-	defer client.Close()
-
-	cache := client.Cache("bulk")
+	ctx := context.Background()
 
 	entries := map[string][]byte{
 		"k1": []byte("v1"),
@@ -71,19 +62,11 @@ func TestPutAllGetAll_Empty(t *testing.T) {
 		t.Skip("skipping integration test")
 	}
 
-	createTestCache(t, sharedContainer, "bulk-empty")
+	cacheName := uniqueCacheName(t, "bulk-empty")
+	cache, cleanup := setupCache(t, cacheName)
+	defer cleanup()
 
-	uri := fmt.Sprintf("hotrod://admin:password@%s", sharedAddr)
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	client, err := hotrod.NewClient(ctx, uri)
-	if err != nil {
-		t.Fatalf("NewClient: %v", err)
-	}
-	defer client.Close()
-
-	cache := client.Cache("bulk-empty")
+	ctx := context.Background()
 
 	if err := cache.PutAll(ctx, map[string][]byte{}); err != nil {
 		t.Fatalf("PutAll empty: %v", err)
@@ -103,19 +86,11 @@ func TestPutAll_WithExpiry(t *testing.T) {
 		t.Skip("skipping integration test")
 	}
 
-	createTestCache(t, sharedContainer, "bulk-ttl")
+	cacheName := uniqueCacheName(t, "bulk-ttl")
+	cache, cleanup := setupCache(t, cacheName)
+	defer cleanup()
 
-	uri := fmt.Sprintf("hotrod://admin:password@%s", sharedAddr)
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	client, err := hotrod.NewClient(ctx, uri)
-	if err != nil {
-		t.Fatalf("NewClient: %v", err)
-	}
-	defer client.Close()
-
-	cache := client.Cache("bulk-ttl")
+	ctx := context.Background()
 
 	entries := map[string][]byte{
 		"e1": []byte("val1"),

@@ -413,9 +413,6 @@ func decodeUvarint(data []byte) (uint64, int) {
 		}
 		v |= uint64(b&0x7F) << (7 * i)
 		if b < 0x80 {
-			if v > math.MaxUint64 {
-				return 0, -1
-			}
 			return v, i + 1
 		}
 	}

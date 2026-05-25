@@ -173,5 +173,5 @@ func (nc *NearCache) updateBloomFilter() {
 		Cache:     nc.remote.name,
 		BloomBits: bits,
 	}
-	nc.remote.client.pool.ExecuteOnListener(ctx, nc.listenerID, op)
+	_, _ = nc.remote.client.pool.ExecuteOnListener(ctx, nc.listenerID, op)
 }

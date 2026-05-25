@@ -32,7 +32,7 @@ func TestListener_CreatedModifiedRemoved(t *testing.T) {
 	if err != nil {
 		t.Fatalf("AddListener: %v", err)
 	}
-	defer cache.RemoveListener(ctx, listener)
+	defer func() { _ = cache.RemoveListener(ctx, listener) }()
 
 	// Put → Created event
 	if err := cache.Put(ctx, []byte("k1"), []byte("v1")); err != nil {
@@ -95,7 +95,7 @@ func TestListener_FilterByInterest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("AddListener: %v", err)
 	}
-	defer cache.RemoveListener(ctx, listener)
+	defer func() { _ = cache.RemoveListener(ctx, listener) }()
 
 	// Put → should receive created event
 	if err := cache.Put(ctx, []byte("k1"), []byte("v1")); err != nil {

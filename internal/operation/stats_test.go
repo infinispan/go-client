@@ -9,11 +9,11 @@ import (
 
 func TestStatsOpDecodeResponse(t *testing.T) {
 	var buf bytes.Buffer
-	codec.WriteVInt(&buf, 2)
-	codec.WriteLPString(&buf, "timeSinceStart")
-	codec.WriteLPString(&buf, "42")
-	codec.WriteLPString(&buf, "currentNumberOfEntries")
-	codec.WriteLPString(&buf, "10")
+	_ = codec.WriteVInt(&buf, 2)
+	_ = codec.WriteLPString(&buf, "timeSinceStart")
+	_ = codec.WriteLPString(&buf, "42")
+	_ = codec.WriteLPString(&buf, "currentNumberOfEntries")
+	_ = codec.WriteLPString(&buf, "10")
 
 	result, err := (&StatsOp{}).DecodeResponse(codec.StatusSuccess, bytes.NewReader(buf.Bytes()))
 	if err != nil {
@@ -33,7 +33,7 @@ func TestStatsOpDecodeResponse(t *testing.T) {
 
 func TestStatsOpDecodeEmpty(t *testing.T) {
 	var buf bytes.Buffer
-	codec.WriteVInt(&buf, 0)
+	_ = codec.WriteVInt(&buf, 0)
 
 	result, err := (&StatsOp{}).DecodeResponse(codec.StatusSuccess, bytes.NewReader(buf.Bytes()))
 	if err != nil {

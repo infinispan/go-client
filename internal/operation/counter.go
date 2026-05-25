@@ -1,6 +1,7 @@
 package operation
 
 import (
+	"fmt"
 	"io"
 
 	"infinispan.org/go-client/internal/codec"
@@ -148,11 +149,11 @@ func DecodeCounterEventBody(r io.Reader) (*CounterEvent, []byte, error) {
 }
 
 func SkipCounterEventBody(r io.Reader) {
-	codec.ReadLPString(r)
-	codec.ReadLPBytes(r)
-	codec.ReadU1(r)
-	codec.ReadLong(r)
-	codec.ReadLong(r)
+	_, _ = codec.ReadLPString(r)
+	_, _ = codec.ReadLPBytes(r)
+	_, _ = codec.ReadU1(r)
+	_, _ = codec.ReadLong(r)
+	_, _ = codec.ReadLong(r)
 }
 
 // --- CounterCreateOp ---
@@ -247,10 +248,16 @@ func (o *CounterAddAndGetOp) WriteBody(w io.Writer) error {
 }
 
 func (o *CounterAddAndGetOp) DecodeResponse(status byte, r io.Reader) (any, error) {
-	if status != codec.StatusSuccess {
-		return nil, nil
+	// When successful, read and return the new counter value
+	if status == codec.StatusSuccess {
+		return codec.ReadLong(r)
 	}
-	return codec.ReadLong(r)
+	// Status 0x04 means counter bound was reached - operation rejected
+	if status == codec.StatusCounterBoundReached {
+		return nil, fmt.Errorf("counter bound reached")
+	}
+	// For other non-success statuses, return nil (will be handled by caller)
+	return nil, nil
 }
 
 // --- CounterResetOp ---
@@ -389,8 +396,9 @@ func (o *CounterRemoveOp) WriteBody(w io.Writer) error {
 	return codec.WriteLPString(w, o.Name)
 }
 
-func (o *CounterRemoveOp) DecodeResponse(_ byte, _ io.Reader) (any, error) {
-	return nil, nil
+func (o *CounterRemoveOp) DecodeResponse(status byte, _ io.Reader) (any, error) {
+	// Return true if removal was successful
+	return status == codec.StatusSuccess, nil
 }
 
 // --- CounterAddListenerOp ---
