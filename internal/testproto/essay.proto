@@ -1,0 +1,10 @@
+syntax = "proto3";
+package test;
+option go_package = "infinispan.org/go-client/internal/testproto";
+
+// Essay message for testing large payloads
+// Based on HugeProtobufMessageTest.java
+message Essay {
+  string title = 1;
+  string content = 2;  // Can hold very large strings (68MB+)
+}

@@ -1,0 +1,92 @@
+syntax = "proto3";
+package test;
+option go_package = "infinispan.org/go-client/internal/testproto";
+
+// Enum for gender
+enum Gender {
+  MALE = 0;
+  FEMALE = 1;
+  OTHER = 2;
+}
+
+// Enum for account type
+enum AccountType {
+  CHECKING = 0;
+  SAVINGS = 1;
+  INVESTMENT = 2;
+}
+
+// Address message (used as nested type)
+message Address {
+  string street = 1;
+  string city = 2;
+  string state = 3;
+  string postcode = 4;
+  string country = 5;
+}
+
+// Phone number message
+message PhoneNumber {
+  string number = 1;
+  string type = 2;  // "mobile", "home", "work"
+}
+
+// User message with complex nested structures
+// Based on ClientProtoStreamMarshallerTest.java
+message User {
+  int32 id = 1;
+  string name = 2;
+  string surname = 3;
+  Gender gender = 4;
+
+  // Repeated fields
+  repeated int32 account_ids = 5;
+  repeated Address addresses = 6;
+  repeated PhoneNumber phone_numbers = 7;
+
+  // Map fields
+  map<string, string> metadata = 8;
+  map<string, int32> preferences = 9;
+
+  // Optional fields (proto3)
+  optional string nickname = 10;
+  optional int32 age = 11;
+  optional string email = 12;
+}
+
+// Company message with nested User
+message Company {
+  string name = 1;
+  repeated User employees = 2;
+  Address headquarters = 3;
+  map<string, string> departments = 4;
+}
+
+// Message with oneof
+message Contact {
+  string name = 1;
+
+  oneof contact_method {
+    string email = 2;
+    string phone = 3;
+    Address address = 4;
+  }
+}
+
+// Message with nested maps
+message Configuration {
+  string name = 1;
+  map<string, string> string_values = 2;
+  map<string, int32> int_values = 3;
+  map<string, bool> bool_values = 4;
+}
+
+// Message with all repeated types
+message Collection {
+  repeated string strings = 1;
+  repeated int32 int32s = 2;
+  repeated int64 int64s = 3;
+  repeated bool bools = 4;
+  repeated double doubles = 5;
+  repeated Gender enums = 6;
+}
