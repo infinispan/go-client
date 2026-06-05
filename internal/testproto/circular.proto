@@ -1,0 +1,17 @@
+syntax = "proto3";
+package test;
+option go_package = "infinispan.org/go-client/internal/testproto";
+
+// Team and Player form a circular reference:
+// Team -> Player -> Team
+// This should be rejected during marshalling
+
+message Team {
+  string name = 1;
+  repeated Player players = 2;
+}
+
+message Player {
+  string name = 1;
+  Team team = 2;  // Circular reference back to Team
+}
