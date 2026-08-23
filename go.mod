@@ -1,10 +1,10 @@
 module infinispan.org/go-client
 
-go 1.25
+go 1.25.0
 
 require (
 	github.com/testcontainers/testcontainers-go v0.42.0
-	google.golang.org/protobuf v1.36.11
+	google.golang.org/protobuf v1.36.12
 )
 
 require (
