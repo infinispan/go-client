@@ -1,6 +1,6 @@
 module infinispan.org/go-client
 
-go 1.25.13
+go 1.25
 
 require (
 	github.com/testcontainers/testcontainers-go v0.42.0
