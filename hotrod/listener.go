@@ -105,10 +105,13 @@ func (rc *RemoteCache) AddListener(ctx context.Context, opts ...ListenerOption) 
 }
 
 // RemoveListener unregisters a previously added cache event listener.
+// The Events channel is closed after the listener is removed.
 func (rc *RemoteCache) RemoveListener(ctx context.Context, listener *CacheListener) error {
 	op := &operation.RemoveClientListenerOp{
 		Cache:      rc.name,
 		ListenerID: listener.id,
 	}
-	return rc.client.pool.RemoveListener(ctx, op)
+	err := rc.client.pool.RemoveListener(ctx, op)
+	close(listener.ch)
+	return err
 }

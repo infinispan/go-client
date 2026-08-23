@@ -204,8 +204,7 @@ func WithGetFlag(flags ...Flag) GetOption {
 type RemoveOption func(*removeConfig)
 
 type removeConfig struct {
-	flags     int32
-	mediaType int32
+	flags int32
 }
 
 // WithRemoveFlag sets one or more operation flags on a remove operation.
@@ -214,13 +213,6 @@ func WithRemoveFlag(flags ...Flag) RemoveOption {
 		for _, f := range flags {
 			cfg.flags |= int32(f)
 		}
-	}
-}
-
-// WithRemoveMediaType sets the key media type for a remove operation.
-func WithRemoveMediaType(mediaType int32) RemoveOption {
-	return func(cfg *removeConfig) {
-		cfg.mediaType = mediaType
 	}
 }
 

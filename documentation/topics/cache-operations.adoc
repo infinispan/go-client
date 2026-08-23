@@ -94,6 +94,38 @@ err := cache.PutAll(ctx, entries)
 result, err := cache.GetAll(ctx, []string{"key1", "key2"})
 ----
 
+=== Cache Encoding
+
+By default, `RemoteCache` sends keys and values as raw bytes (`application/octet-stream`).
+Use `WithEncoding` to set the media type for both keys and values, matching the cache's server-side encoding:
+
+[source,go]
+----
+textCache := client.Cache("textCache").WithEncoding(hotrod.MediaTypeTextPlain)
+textCache.Put(ctx, []byte("greeting"), []byte("Hello!"))
+
+jsonCache := client.Cache("jsonCache").WithEncoding(hotrod.MediaTypeJSON)
+jsonCache.Put(ctx, []byte(`"key"`), []byte(`{"value": 1}`))
+----
+
+Use `WithKeyEncoding` or `WithValueEncoding` when keys and values use different media types:
+
+[source,go]
+----
+cache := client.Cache("mixed").
+    WithKeyEncoding(hotrod.MediaTypeTextPlain).
+    WithValueEncoding(hotrod.MediaTypeJSON)
+----
+
+Available media type constants:
+
+`MediaTypeTextPlain`:: `text/plain`
+`MediaTypeJSON`:: `application/json`
+`MediaTypeProtostream`:: `application/x-protostream`
+`MediaTypeOctetStream`:: `application/octet-stream` (the default)
+
+NOTE: `TypedCache` sets the encoding automatically from its `Marshaller.MediaType()`, so you do not need to call `WithEncoding` when using typed caches.
+
 === Expiration
 
 Use `WithLifespan` and `WithMaxIdle` to control entry expiration:

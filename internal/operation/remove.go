@@ -7,10 +7,11 @@ import (
 )
 
 type RemoveOp struct {
-	Cache     string
-	Key       []byte
-	MediaType int32
-	OpFlags   int32
+	Cache   string
+	Key     []byte
+	KeyMT   int32
+	ValueMT int32
+	OpFlags int32
 }
 
 type RemoveResponse struct {
@@ -24,15 +25,15 @@ func (r *RemoveOp) CacheName() []byte    { return []byte(r.Cache) }
 func (r *RemoveOp) Flags() int32         { return r.OpFlags }
 
 func (r *RemoveOp) KeyMediaType() int32 {
-	if r.MediaType != 0 {
-		return r.MediaType
+	if r.KeyMT != 0 {
+		return r.KeyMT
 	}
 	return codec.MediaIDOctetStream
 }
 
 func (r *RemoveOp) ValueMediaType() int32 {
-	if r.MediaType != 0 {
-		return r.MediaType
+	if r.ValueMT != 0 {
+		return r.ValueMT
 	}
 	return codec.MediaIDOctetStream
 }

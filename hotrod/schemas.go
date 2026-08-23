@@ -1,10 +1,6 @@
 package hotrod
 
-import (
-	"context"
-
-	"infinispan.org/go-client/internal/codec"
-)
+import "context"
 
 const protobufMetadataCache = "___protobuf_metadata"
 
@@ -22,14 +18,14 @@ func (c *Client) Schemas() *SchemaManager {
 // name is the schema filename (e.g., "person.proto").
 // content is the raw .proto file content.
 func (sm *SchemaManager) Register(ctx context.Context, name string, content string) error {
-	cache := sm.client.Cache(protobufMetadataCache)
-	return cache.PutRaw(ctx, []byte(name), []byte(content), codec.MediaIDTextPlain)
+	cache := sm.client.Cache(protobufMetadataCache).WithEncoding(MediaTypeTextPlain)
+	return cache.Put(ctx, []byte(name), []byte(content))
 }
 
 // Get retrieves a registered schema by name.
 func (sm *SchemaManager) Get(ctx context.Context, name string) (string, bool, error) {
-	cache := sm.client.Cache(protobufMetadataCache)
-	data, found, err := cache.GetRaw(ctx, []byte(name), codec.MediaIDTextPlain)
+	cache := sm.client.Cache(protobufMetadataCache).WithEncoding(MediaTypeTextPlain)
+	data, found, err := cache.Get(ctx, []byte(name))
 	if err != nil {
 		return "", false, err
 	}

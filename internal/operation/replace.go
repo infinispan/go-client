@@ -8,13 +8,14 @@ import (
 )
 
 type ReplaceOp struct {
-	Cache     string
-	Key       []byte
-	Value     []byte
-	Lifespan  time.Duration
-	MaxIdle   time.Duration
-	MediaType int32
-	OpFlags   int32
+	Cache    string
+	Key      []byte
+	Value    []byte
+	Lifespan time.Duration
+	MaxIdle  time.Duration
+	KeyMT    int32
+	ValueMT  int32
+	OpFlags  int32
 }
 
 func (o *ReplaceOp) RequestOpCode() byte  { return codec.OpReplace }
@@ -23,15 +24,15 @@ func (o *ReplaceOp) CacheName() []byte    { return []byte(o.Cache) }
 func (o *ReplaceOp) Flags() int32         { return o.OpFlags }
 
 func (o *ReplaceOp) KeyMediaType() int32 {
-	if o.MediaType != 0 {
-		return o.MediaType
+	if o.KeyMT != 0 {
+		return o.KeyMT
 	}
 	return codec.MediaIDOctetStream
 }
 
 func (o *ReplaceOp) ValueMediaType() int32 {
-	if o.MediaType != 0 {
-		return o.MediaType
+	if o.ValueMT != 0 {
+		return o.ValueMT
 	}
 	return codec.MediaIDOctetStream
 }

@@ -59,11 +59,7 @@ func TestLargeMessage_1MB(t *testing.T) {
 		t.Fatalf("Register schema: %v", err)
 	}
 
-	cache := hotrod.NewTypedCache[int32, *testproto.Essay](
-		client, "essay-1mb",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.Essay { return &testproto.Essay{} },
-	)
+	cache := hotrod.NewTypedCache[int32, *testproto.Essay](client, "essay-1mb").Build()
 
 	t.Logf("Creating 1MB string...")
 	content := makeHugeString(size)
@@ -132,11 +128,7 @@ func TestLargeMessage_10MB(t *testing.T) {
 		t.Fatalf("Register schema: %v", err)
 	}
 
-	cache := hotrod.NewTypedCache[int32, *testproto.Essay](
-		client, "essay-10mb",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.Essay { return &testproto.Essay{} },
-	)
+	cache := hotrod.NewTypedCache[int32, *testproto.Essay](client, "essay-10mb").Build()
 
 	t.Logf("Creating 10MB string...")
 	content := makeHugeString(size)
@@ -216,11 +208,7 @@ func TestLargeMessage_50MB(t *testing.T) {
 		t.Fatalf("Register schema: %v", err)
 	}
 
-	cache := hotrod.NewTypedCache[int32, *testproto.Essay](
-		client, "essay-50mb",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.Essay { return &testproto.Essay{} },
-	)
+	cache := hotrod.NewTypedCache[int32, *testproto.Essay](client, "essay-50mb").Build()
 
 	t.Logf("Creating 50MB string...")
 	content := makeHugeString(size)
@@ -304,11 +292,7 @@ func TestLargeMessage_Performance(t *testing.T) {
 		t.Fatalf("Register schema: %v", err)
 	}
 
-	cache := hotrod.NewTypedCache[int32, *testproto.Essay](
-		client, "essay-perf",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.Essay { return &testproto.Essay{} },
-	)
+	cache := hotrod.NewTypedCache[int32, *testproto.Essay](client, "essay-perf").Build()
 
 	for i, test := range sizes {
 		t.Run(test.name, func(t *testing.T) {
@@ -376,11 +360,7 @@ func TestLargeMessage_ConcurrentPuts(t *testing.T) {
 		t.Fatalf("Register schema: %v", err)
 	}
 
-	cache := hotrod.NewTypedCache[int32, *testproto.Essay](
-		client, "essay-concurrent",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.Essay { return &testproto.Essay{} },
-	)
+	cache := hotrod.NewTypedCache[int32, *testproto.Essay](client, "essay-concurrent").Build()
 
 	// Put multiple essays concurrently
 	errChan := make(chan error, numMessages)

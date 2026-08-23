@@ -175,8 +175,10 @@ func expectEvent(t *testing.T, listener *hotrod.CacheListener, timeout time.Dura
 func expectNoEvent(t *testing.T, listener *hotrod.CacheListener, wait time.Duration) {
 	t.Helper()
 	select {
-	case ev := <-listener.Events:
-		t.Fatalf("expected no event, got %v for key %q", ev.Type, ev.Key)
+	case ev, ok := <-listener.Events:
+		if ok {
+			t.Fatalf("expected no event, got %v for key %q", ev.Type, ev.Key)
+		}
 	case <-time.After(wait):
 		// good, no event
 	}

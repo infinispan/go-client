@@ -29,11 +29,7 @@ func TestQuery_BasicIckle(t *testing.T) {
 	registerSchema(t, client, "person.proto", indexedPersonProtoSchema)
 	createIndexedCache(t, sharedContainer, "q-basic")
 
-	cache := hotrod.NewTypedCache[string, *testproto.Person](
-		client, "q-basic",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.Person { return &testproto.Person{} },
-	)
+	cache := hotrod.NewTypedCache[string, *testproto.Person](client, "q-basic").Build()
 
 	persons := []*testproto.Person{
 		{Name: "Alice", Age: 30},
@@ -96,11 +92,7 @@ func TestQuery_WithParams(t *testing.T) {
 	registerSchema(t, client, "person.proto", indexedPersonProtoSchema)
 	createIndexedCache(t, sharedContainer, "q-params")
 
-	cache := hotrod.NewTypedCache[string, *testproto.Person](
-		client, "q-params",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.Person { return &testproto.Person{} },
-	)
+	cache := hotrod.NewTypedCache[string, *testproto.Person](client, "q-params").Build()
 
 	for _, p := range []*testproto.Person{
 		{Name: "Alice", Age: 20},
@@ -143,11 +135,7 @@ func TestQuery_Pagination(t *testing.T) {
 	registerSchema(t, client, "person.proto", indexedPersonProtoSchema)
 	createIndexedCache(t, sharedContainer, "q-page")
 
-	cache := hotrod.NewTypedCache[string, *testproto.Person](
-		client, "q-page",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.Person { return &testproto.Person{} },
-	)
+	cache := hotrod.NewTypedCache[string, *testproto.Person](client, "q-page").Build()
 
 	for i := 0; i < 5; i++ {
 		p := &testproto.Person{Name: fmt.Sprintf("Person%d", i), Age: int32(20 + i)}

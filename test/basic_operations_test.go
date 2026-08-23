@@ -813,75 +813,43 @@ func TestBasicGetWithMetadata(t *testing.T) {
 	}
 }
 
-// TODO: Fix media type handling - server doesn't recognize the media type constant
-func TestBasicPutRawGetRaw(t *testing.T) {
-	t.Skip("TODO: Fix media type constant - MediaTypeIds.getMediaType returns null")
-
+func TestBasicWithEncoding(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
 	}
 
-	cacheName := uniqueCacheName(t, "rawops")
-	cache, cleanup := setupCache(t, cacheName)
-	defer cleanup()
+	cacheName := uniqueCacheName(t, "encoding")
 
 	ctx := context.Background()
+	config := fmt.Sprintf(`<distributed-cache name="%s" mode="SYNC">
+  <encoding media-type="text/plain"/>
+</distributed-cache>`, cacheName)
+	createTestCacheWithConfig(t, sharedContainer, cacheName, config)
 
-	// Media type for protostream (the default encoding used by test caches)
-	const MediaTypeApplicationProtostream = 0x0002_9003 // application/x-protostream
+	uri := fmt.Sprintf("hotrod://admin:password@%s", sharedAddr)
+	connCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
 
-	// Test PutRaw/GetRaw with protostream media type (matching cache encoding)
-	// Using simple byte data that's valid protostream
-	testData := []byte("test-value-for-raw-ops")
-
-	err := cache.PutRaw(ctx, []byte("raw-key"), testData, MediaTypeApplicationProtostream)
+	client, err := hotrod.NewClient(connCtx, uri)
 	if err != nil {
-		t.Fatalf("PutRaw: %v", err)
+		t.Fatalf("NewClient: %v", err)
+	}
+	defer client.Close()
+
+	cache := client.Cache(cacheName).WithEncoding(hotrod.MediaTypeTextPlain)
+
+	if err := cache.Put(ctx, []byte("key1"), []byte("value1")); err != nil {
+		t.Fatalf("Put: %v", err)
 	}
 
-	// GetRaw should retrieve the same data
-	val, found, err := cache.GetRaw(ctx, []byte("raw-key"), MediaTypeApplicationProtostream)
+	val, found, err := cache.Get(ctx, []byte("key1"))
 	if err != nil {
-		t.Fatalf("GetRaw: %v", err)
+		t.Fatalf("Get: %v", err)
 	}
 	if !found {
-		t.Fatal("expected raw-key to be found")
+		t.Fatal("expected key to be found")
 	}
-	if string(val) != string(testData) {
-		t.Errorf("got %q, want %q", string(val), string(testData))
+	if string(val) != "value1" {
+		t.Errorf("got %q, want %q", string(val), "value1")
 	}
-
-	// Test with different data
-	binaryData := []byte{0x01, 0x02, 0x03, 0x04, 0x05}
-	err = cache.PutRaw(ctx, []byte("binary-key"), binaryData, MediaTypeApplicationProtostream)
-	if err != nil {
-		t.Fatalf("PutRaw binary: %v", err)
-	}
-
-	val, found, err = cache.GetRaw(ctx, []byte("binary-key"), MediaTypeApplicationProtostream)
-	if err != nil {
-		t.Fatalf("GetRaw binary: %v", err)
-	}
-	if !found {
-		t.Fatal("expected binary-key to be found")
-	}
-	if len(val) != len(binaryData) {
-		t.Errorf("got %d bytes, want %d", len(val), len(binaryData))
-	}
-	for i, b := range binaryData {
-		if val[i] != b {
-			t.Errorf("byte %d: got 0x%02X, want 0x%02X", i, val[i], b)
-		}
-	}
-
-	// GetRaw on non-existent key
-	_, found, err = cache.GetRaw(ctx, []byte("missing"), MediaTypeApplicationProtostream)
-	if err != nil {
-		t.Fatalf("GetRaw missing key: %v", err)
-	}
-	if found {
-		t.Error("expected key not to be found")
-	}
-
-	t.Logf("PutRaw/GetRaw test passed - methods are now covered")
 }

@@ -13,10 +13,11 @@ type GetWithMetadataResponse struct {
 }
 
 type GetWithMetadataOp struct {
-	Cache     string
-	Key       []byte
-	MediaType int32
-	OpFlags   int32
+	Cache   string
+	Key     []byte
+	KeyMT   int32
+	ValueMT int32
+	OpFlags int32
 }
 
 func (g *GetWithMetadataOp) RequestOpCode() byte  { return codec.OpGetWithMetadata }
@@ -25,15 +26,15 @@ func (g *GetWithMetadataOp) CacheName() []byte    { return []byte(g.Cache) }
 func (g *GetWithMetadataOp) Flags() int32         { return g.OpFlags }
 
 func (g *GetWithMetadataOp) KeyMediaType() int32 {
-	if g.MediaType != 0 {
-		return g.MediaType
+	if g.KeyMT != 0 {
+		return g.KeyMT
 	}
 	return codec.MediaIDOctetStream
 }
 
 func (g *GetWithMetadataOp) ValueMediaType() int32 {
-	if g.MediaType != 0 {
-		return g.MediaType
+	if g.ValueMT != 0 {
+		return g.ValueMT
 	}
 	return codec.MediaIDOctetStream
 }

@@ -108,11 +108,7 @@ func TestNonCircularReference_Success(t *testing.T) {
 		t.Fatalf("Register schema: %v", err)
 	}
 
-	cache := hotrod.NewTypedCache[string, *testproto.Team](
-		client, "non-circular-test",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.Team { return &testproto.Team{} },
-	)
+	cache := hotrod.NewTypedCache[string, *testproto.Team](client, "non-circular-test").Build()
 
 	// Create a team WITHOUT circular reference
 	// (Player has no team reference set)

@@ -50,11 +50,7 @@ func TestLargeMessage_FindDefaultLimit(t *testing.T) {
 		t.Fatalf("Register schema: %v", err)
 	}
 
-	cache := hotrod.NewTypedCache[int32, *testproto.Essay](
-		client, "essay-limit-test",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.Essay { return &testproto.Essay{} },
-	)
+	cache := hotrod.NewTypedCache[int32, *testproto.Essay](client, "essay-limit-test").Build()
 
 	var maxSuccessful int
 	var firstFailure int

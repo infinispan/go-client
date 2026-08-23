@@ -65,11 +65,7 @@ func TestContinuousQuery_JoiningAndLeaving(t *testing.T) {
 	registerSchema(t, client, "person.proto", indexedPersonProtoSchema)
 	createIndexedCache(t, sharedContainer, "cq-test")
 
-	cache := hotrod.NewTypedCache[string, *testproto.Person](
-		client, "cq-test",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.Person { return &testproto.Person{} },
-	)
+	cache := hotrod.NewTypedCache[string, *testproto.Person](client, "cq-test").Build()
 	rawCache := client.Cache("cq-test")
 
 	cq, err := rawCache.ContinuousQuery(ctx, "FROM test.Person WHERE age >= 18")
@@ -125,11 +121,7 @@ func TestContinuousQuery_NonMatchingEntryNoEvent(t *testing.T) {
 	registerSchema(t, client, "person.proto", indexedPersonProtoSchema)
 	createIndexedCache(t, sharedContainer, "cq-nomatch")
 
-	cache := hotrod.NewTypedCache[string, *testproto.Person](
-		client, "cq-nomatch",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.Person { return &testproto.Person{} },
-	)
+	cache := hotrod.NewTypedCache[string, *testproto.Person](client, "cq-nomatch").Build()
 	rawCache := client.Cache("cq-nomatch")
 
 	cq, err := rawCache.ContinuousQuery(ctx, "FROM test.Person WHERE age >= 18")
@@ -163,11 +155,7 @@ func TestContinuousQuery_WithParam(t *testing.T) {
 	registerSchema(t, client, "person.proto", indexedPersonProtoSchema)
 	createIndexedCache(t, sharedContainer, "cq-param")
 
-	cache := hotrod.NewTypedCache[string, *testproto.Person](
-		client, "cq-param",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.Person { return &testproto.Person{} },
-	)
+	cache := hotrod.NewTypedCache[string, *testproto.Person](client, "cq-param").Build()
 	rawCache := client.Cache("cq-param")
 
 	cq, err := rawCache.ContinuousQuery(ctx, "FROM test.Person WHERE age >= :minAge",

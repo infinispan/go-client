@@ -167,18 +167,36 @@ func (c *Client) ConsistentHashOwnerCount(cacheName string) int {
 
 // RemoteCache provides operations on a single Infinispan cache.
 type RemoteCache struct {
-	client *Client
-	name   string
+	client       *Client
+	name         string
+	keyMediaType int32
+	valMediaType int32
+}
+
+// WithEncoding returns a copy of this cache configured to use the given media type
+// for both keys and values (e.g. MediaTypeJSON, MediaTypeTextPlain).
+func (rc *RemoteCache) WithEncoding(mediaType int32) *RemoteCache {
+	return &RemoteCache{client: rc.client, name: rc.name, keyMediaType: mediaType, valMediaType: mediaType}
+}
+
+// WithKeyEncoding returns a copy of this cache configured to use the given media type for keys.
+func (rc *RemoteCache) WithKeyEncoding(mediaType int32) *RemoteCache {
+	return &RemoteCache{client: rc.client, name: rc.name, keyMediaType: mediaType, valMediaType: rc.valMediaType}
+}
+
+// WithValueEncoding returns a copy of this cache configured to use the given media type for values.
+func (rc *RemoteCache) WithValueEncoding(mediaType int32) *RemoteCache {
+	return &RemoteCache{client: rc.client, name: rc.name, keyMediaType: rc.keyMediaType, valMediaType: mediaType}
 }
 
 // Put stores a key-value pair in the cache, overwriting any existing entry.
 func (rc *RemoteCache) Put(ctx context.Context, key, value []byte, opts ...PutOption) error {
-	return rc.PutRaw(ctx, key, value, 0, opts...)
+	return rc.putInternal(ctx, key, value, opts...)
 }
 
 // Get retrieves the value for a key. Returns (nil, false, nil) if the key does not exist.
 func (rc *RemoteCache) Get(ctx context.Context, key []byte) ([]byte, bool, error) {
-	return rc.GetRaw(ctx, key, 0)
+	return rc.getInternal(ctx, key)
 }
 
 // MetadataValue holds a cache entry's value along with its server-side metadata.
@@ -194,8 +212,10 @@ type MetadataValue struct {
 // GetWithMetadata retrieves the value and metadata (version, lifespan, timestamps) for a key.
 func (rc *RemoteCache) GetWithMetadata(ctx context.Context, key []byte) (*MetadataValue, bool, error) {
 	resp, err := execute[*operation.GetWithMetadataResponse](ctx, rc.client.pool, &operation.GetWithMetadataOp{
-		Cache: rc.name,
-		Key:   key,
+		Cache:   rc.name,
+		Key:     key,
+		KeyMT:   rc.keyMediaType,
+		ValueMT: rc.valMediaType,
 	})
 	if err != nil {
 		return nil, false, err
@@ -273,20 +293,20 @@ func (rc *RemoteCache) RemoveIfUnmodified(ctx context.Context, key []byte, versi
 	return resp.Success, nil
 }
 
-// PutRaw stores a key-value pair with an explicit media type identifier.
-func (rc *RemoteCache) PutRaw(ctx context.Context, key, value []byte, mediaType int32, opts ...PutOption) error {
+func (rc *RemoteCache) putInternal(ctx context.Context, key, value []byte, opts ...PutOption) error {
 	cfg := &putConfig{}
 	for _, o := range opts {
 		o(cfg)
 	}
 	_, err := rc.client.pool.Execute(ctx, &operation.PutOp{
-		Cache:     rc.name,
-		Key:       key,
-		Value:     value,
-		Lifespan:  cfg.lifespan,
-		MaxIdle:   cfg.maxIdle,
-		MediaType: mediaType,
-		OpFlags:   cfg.flags,
+		Cache:    rc.name,
+		Key:      key,
+		Value:    value,
+		Lifespan: cfg.lifespan,
+		MaxIdle:  cfg.maxIdle,
+		KeyMT:    rc.keyMediaType,
+		ValueMT:  rc.valMediaType,
+		OpFlags:  cfg.flags,
 	})
 	return err
 }
@@ -304,6 +324,8 @@ func (rc *RemoteCache) GetAndPut(ctx context.Context, key, value []byte, opts ..
 		Value:    value,
 		Lifespan: cfg.lifespan,
 		MaxIdle:  cfg.maxIdle,
+		KeyMT:    rc.keyMediaType,
+		ValueMT:  rc.valMediaType,
 		OpFlags:  cfg.flags,
 	})
 	if err != nil {
@@ -322,10 +344,11 @@ func (rc *RemoteCache) Remove(ctx context.Context, key []byte, opts ...RemoveOpt
 		o(cfg)
 	}
 	_, err := rc.client.pool.Execute(ctx, &operation.RemoveOp{
-		Cache:     rc.name,
-		Key:       key,
-		MediaType: cfg.mediaType,
-		OpFlags:   cfg.flags,
+		Cache:   rc.name,
+		Key:     key,
+		KeyMT:   rc.keyMediaType,
+		ValueMT: rc.valMediaType,
+		OpFlags: cfg.flags,
 	})
 	return err
 }
@@ -338,10 +361,11 @@ func (rc *RemoteCache) GetAndRemove(ctx context.Context, key []byte, opts ...Rem
 	}
 	cfg.flags |= int32(FlagForceReturnValue)
 	resp, err := execute[*operation.RemoveResponse](ctx, rc.client.pool, &operation.RemoveOp{
-		Cache:     rc.name,
-		Key:       key,
-		MediaType: cfg.mediaType,
-		OpFlags:   cfg.flags,
+		Cache:   rc.name,
+		Key:     key,
+		KeyMT:   rc.keyMediaType,
+		ValueMT: rc.valMediaType,
+		OpFlags: cfg.flags,
 	})
 	if err != nil {
 		return nil, false, err
@@ -362,6 +386,8 @@ func (rc *RemoteCache) PutIfAbsent(ctx context.Context, key, value []byte, opts 
 		Value:    value,
 		Lifespan: cfg.lifespan,
 		MaxIdle:  cfg.maxIdle,
+		KeyMT:    rc.keyMediaType,
+		ValueMT:  rc.valMediaType,
 		OpFlags:  cfg.flags,
 	})
 	if err != nil {
@@ -384,6 +410,8 @@ func (rc *RemoteCache) PutIfAbsentWithPrevious(ctx context.Context, key, value [
 		Value:    value,
 		Lifespan: cfg.lifespan,
 		MaxIdle:  cfg.maxIdle,
+		KeyMT:    rc.keyMediaType,
+		ValueMT:  rc.valMediaType,
 		OpFlags:  cfg.flags,
 	})
 	if err != nil {
@@ -405,6 +433,8 @@ func (rc *RemoteCache) Replace(ctx context.Context, key, value []byte, opts ...P
 		Value:    value,
 		Lifespan: cfg.lifespan,
 		MaxIdle:  cfg.maxIdle,
+		KeyMT:    rc.keyMediaType,
+		ValueMT:  rc.valMediaType,
 		OpFlags:  cfg.flags,
 	})
 	if err != nil {
@@ -427,6 +457,8 @@ func (rc *RemoteCache) ReplaceWithPrevious(ctx context.Context, key, value []byt
 		Value:    value,
 		Lifespan: cfg.lifespan,
 		MaxIdle:  cfg.maxIdle,
+		KeyMT:    rc.keyMediaType,
+		ValueMT:  rc.valMediaType,
 		OpFlags:  cfg.flags,
 	})
 	if err != nil {
@@ -630,17 +662,17 @@ func entriesToMap(entries []operation.GetAllEntry) map[string][]byte {
 	return m
 }
 
-// GetRaw retrieves the value for a key with an explicit media type identifier.
-func (rc *RemoteCache) GetRaw(ctx context.Context, key []byte, mediaType int32, opts ...GetOption) ([]byte, bool, error) {
+func (rc *RemoteCache) getInternal(ctx context.Context, key []byte, opts ...GetOption) ([]byte, bool, error) {
 	cfg := &getConfig{}
 	for _, o := range opts {
 		o(cfg)
 	}
 	resp, err := execute[*operation.GetResponse](ctx, rc.client.pool, &operation.GetOp{
-		Cache:     rc.name,
-		Key:       key,
-		MediaType: mediaType,
-		OpFlags:   cfg.flags,
+		Cache:   rc.name,
+		Key:     key,
+		KeyMT:   rc.keyMediaType,
+		ValueMT: rc.valMediaType,
+		OpFlags: cfg.flags,
 	})
 	if err != nil {
 		return nil, false, err
@@ -695,16 +727,26 @@ func (rc *RemoteCache) Query(ctx context.Context, ickle string, opts ...QueryOpt
 		return nil, fmt.Errorf("decode query response: %w", err)
 	}
 
-	entries := make([]QueryEntry, len(resp.Results))
+	var entries []QueryEntry
 	if resp.ProjectionSize > 0 {
-		for i, r := range resp.Results {
-			e, err := unwrapProjection(r, int(resp.ProjectionSize))
-			if err != nil {
-				return nil, fmt.Errorf("unwrap projection result %d: %w", i, err)
+		ps := int(resp.ProjectionSize)
+		if len(resp.Results)%ps != 0 {
+			return nil, fmt.Errorf("projection results length %d not divisible by projection size %d", len(resp.Results), ps)
+		}
+		entries = make([]QueryEntry, len(resp.Results)/ps)
+		for i := range entries {
+			columns := make([]any, ps)
+			for j := range ps {
+				v, err := protostream.UnwrapValue(resp.Results[i*ps+j])
+				if err != nil {
+					return nil, fmt.Errorf("unwrap projection result %d column %d: %w", i, j, err)
+				}
+				columns[j] = v
 			}
-			entries[i] = e
+			entries[i] = QueryEntry{Projections: columns}
 		}
 	} else {
+		entries = make([]QueryEntry, len(resp.Results))
 		for i, r := range resp.Results {
 			e, err := unwrapEntity(r)
 			if err != nil {
@@ -754,31 +796,6 @@ func unwrapEntity(data []byte) (QueryEntry, error) {
 	return QueryEntry{}, fmt.Errorf("no entity data in query result")
 }
 
-func unwrapProjection(data []byte, projSize int) (QueryEntry, error) {
-	inner, err := protostream.UnwrapBytes(data)
-	if err != nil {
-		return QueryEntry{}, err
-	}
-	columns := make([]any, projSize)
-	err = protostream.ScanFields(inner, func(fieldNumber, wireType int, value []byte) error {
-		if fieldNumber < 1 || fieldNumber > projSize {
-			return nil
-		}
-		if wireType != 2 {
-			return fmt.Errorf("projection column %d: expected length-delimited, got wire type %d", fieldNumber, wireType)
-		}
-		v, err := protostream.UnwrapValue(value)
-		if err != nil {
-			return fmt.Errorf("projection column %d: %w", fieldNumber, err)
-		}
-		columns[fieldNumber-1] = v
-		return nil
-	})
-	if err != nil {
-		return QueryEntry{}, err
-	}
-	return QueryEntry{Projections: columns}, nil
-}
 
 func wrapQueryParam(value any) ([]byte, error) {
 	switch v := value.(type) {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"reflect"
 
 	"google.golang.org/protobuf/proto"
 )
@@ -17,16 +18,64 @@ type TypedCache[K any, V any] struct {
 	logger     *slog.Logger
 }
 
-// NewTypedCache creates a typed cache with the given marshaller.
-// newV is a factory function that creates a new zero-value V for unmarshalling.
-// For proto.Message types, this is typically: func() *Person { return &Person{} }
-func NewTypedCache[K any, V any](client *Client, cacheName string, m Marshaller, newV func() V) *TypedCache[K, V] {
+// TypedCacheBuilder configures and builds a TypedCache.
+type TypedCacheBuilder[K any, V any] struct {
+	client    *Client
+	cacheName string
+	m         Marshaller
+	newV      func() V
+}
+
+// NewTypedCache returns a builder for a typed cache on the given client and cache name.
+// By default it uses ProtoStreamMarshaller and infers the value factory from the type parameter.
+func NewTypedCache[K any, V any](client *Client, cacheName string) *TypedCacheBuilder[K, V] {
+	return &TypedCacheBuilder[K, V]{
+		client:    client,
+		cacheName: cacheName,
+	}
+}
+
+// WithMarshaller sets a custom marshaller (default: ProtoStreamMarshaller).
+func (b *TypedCacheBuilder[K, V]) WithMarshaller(m Marshaller) *TypedCacheBuilder[K, V] {
+	b.m = m
+	return b
+}
+
+// WithFactory sets a custom factory function for creating new values during unmarshalling.
+// By default, the zero value of V is used.
+func (b *TypedCacheBuilder[K, V]) WithFactory(newV func() V) *TypedCacheBuilder[K, V] {
+	b.newV = newV
+	return b
+}
+
+// Build creates the TypedCache.
+func (b *TypedCacheBuilder[K, V]) Build() *TypedCache[K, V] {
+	m := b.m
+	if m == nil {
+		m = &ProtoStreamMarshaller{}
+	}
+	newV := b.newV
+	if newV == nil {
+		newV = defaultFactory[V]()
+	}
 	return &TypedCache[K, V]{
-		raw:        client.Cache(cacheName),
+		raw:        b.client.Cache(b.cacheName).WithEncoding(m.MediaType()),
 		marshaller: m,
 		newV:       newV,
-		logger:     client.logger,
+		logger:     b.client.logger,
 	}
+}
+
+// defaultFactory returns a factory function for type V.
+// If V is a pointer type, it allocates a new instance of the underlying struct.
+func defaultFactory[V any]() func() V {
+	var zero V
+	t := reflect.TypeOf(&zero).Elem()
+	if t.Kind() == reflect.Ptr {
+		elem := t.Elem()
+		return func() V { return reflect.New(elem).Interface().(V) }
+	}
+	return func() V { return *new(V) }
 }
 
 // Put marshals and stores a key-value pair in the cache.
@@ -39,7 +88,7 @@ func (tc *TypedCache[K, V]) Put(ctx context.Context, key K, value V, opts ...Put
 	if err != nil {
 		return fmt.Errorf("marshal value: %w", err)
 	}
-	return tc.raw.PutRaw(ctx, kb, vb, tc.marshaller.MediaType(), opts...)
+	return tc.raw.Put(ctx, kb, vb, opts...)
 }
 
 // Remove marshals the key and deletes the entry from the cache.
@@ -48,7 +97,7 @@ func (tc *TypedCache[K, V]) Remove(ctx context.Context, key K, opts ...RemoveOpt
 	if err != nil {
 		return fmt.Errorf("marshal key: %w", err)
 	}
-	return tc.raw.Remove(ctx, kb, append([]RemoveOption{WithRemoveMediaType(tc.marshaller.MediaType())}, opts...)...)
+	return tc.raw.Remove(ctx, kb, opts...)
 }
 
 // Get retrieves and unmarshals the value for a key.
@@ -58,7 +107,7 @@ func (tc *TypedCache[K, V]) Get(ctx context.Context, key K) (V, bool, error) {
 		var zero V
 		return zero, false, fmt.Errorf("marshal key: %w", err)
 	}
-	data, found, err := tc.raw.GetRaw(ctx, kb, tc.marshaller.MediaType())
+	data, found, err := tc.raw.Get(ctx, kb)
 	if err != nil || !found {
 		var zero V
 		return zero, found, err

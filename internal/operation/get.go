@@ -7,10 +7,11 @@ import (
 )
 
 type GetOp struct {
-	Cache     string
-	Key       []byte
-	MediaType int32
-	OpFlags   int32
+	Cache   string
+	Key     []byte
+	KeyMT   int32
+	ValueMT int32
+	OpFlags int32
 }
 
 type GetResponse struct {
@@ -24,15 +25,15 @@ func (g *GetOp) CacheName() []byte    { return []byte(g.Cache) }
 func (g *GetOp) Flags() int32         { return g.OpFlags }
 
 func (g *GetOp) KeyMediaType() int32 {
-	if g.MediaType != 0 {
-		return g.MediaType
+	if g.KeyMT != 0 {
+		return g.KeyMT
 	}
 	return codec.MediaIDOctetStream
 }
 
 func (g *GetOp) ValueMediaType() int32 {
-	if g.MediaType != 0 {
-		return g.MediaType
+	if g.ValueMT != 0 {
+		return g.ValueMT
 	}
 	return codec.MediaIDOctetStream
 }

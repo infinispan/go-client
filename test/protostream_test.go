@@ -40,11 +40,7 @@ func TestProtoStreamPutGet(t *testing.T) {
 		t.Fatalf("Register schema: %v", err)
 	}
 
-	cache := hotrod.NewTypedCache[string, *testproto.Person](
-		client, "proto-test",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.Person { return &testproto.Person{} },
-	)
+	cache := hotrod.NewTypedCache[string, *testproto.Person](client, "proto-test").Build()
 
 	if err := cache.Put(ctx, "john", &testproto.Person{Name: "John", Age: 30}); err != nil {
 		t.Fatalf("Put: %v", err)
@@ -82,11 +78,7 @@ func TestProtoStreamKeyNotFound(t *testing.T) {
 	}
 	defer client.Close()
 
-	cache := hotrod.NewTypedCache[string, *testproto.Person](
-		client, "proto-miss",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.Person { return &testproto.Person{} },
-	)
+	cache := hotrod.NewTypedCache[string, *testproto.Person](client, "proto-miss").Build()
 
 	_, found, err := cache.Get(ctx, "nonexistent")
 	if err != nil {
@@ -118,11 +110,7 @@ func TestProtoStreamWithLifespan(t *testing.T) {
 		t.Fatalf("Register schema: %v", err)
 	}
 
-	cache := hotrod.NewTypedCache[string, *testproto.Person](
-		client, "proto-ttl",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.Person { return &testproto.Person{} },
-	)
+	cache := hotrod.NewTypedCache[string, *testproto.Person](client, "proto-ttl").Build()
 
 	if err := cache.Put(ctx, "ephemeral", &testproto.Person{Name: "Temp", Age: 1}, hotrod.WithLifespan(1*time.Second)); err != nil {
 		t.Fatalf("Put with lifespan: %v", err)

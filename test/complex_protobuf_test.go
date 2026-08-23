@@ -110,11 +110,7 @@ func TestComplexProtobuf_NestedMessages(t *testing.T) {
 		t.Fatalf("Register schema: %v", err)
 	}
 
-	cache := hotrod.NewTypedCache[int32, *testproto.User](
-		client, "complex-nested",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.User { return &testproto.User{} },
-	)
+	cache := hotrod.NewTypedCache[int32, *testproto.User](client, "complex-nested").Build()
 
 	// Create user with nested addresses
 	user := &testproto.User{
@@ -207,11 +203,7 @@ func TestComplexProtobuf_RepeatedFields(t *testing.T) {
 		t.Fatalf("Register schema: %v", err)
 	}
 
-	cache := hotrod.NewTypedCache[int32, *testproto.User](
-		client, "complex-repeated",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.User { return &testproto.User{} },
-	)
+	cache := hotrod.NewTypedCache[int32, *testproto.User](client, "complex-repeated").Build()
 
 	user := &testproto.User{
 		Id:         2,
@@ -284,11 +276,7 @@ func TestComplexProtobuf_MapFields(t *testing.T) {
 		t.Fatalf("Register schema: %v", err)
 	}
 
-	cache := hotrod.NewTypedCache[int32, *testproto.User](
-		client, "complex-maps",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.User { return &testproto.User{} },
-	)
+	cache := hotrod.NewTypedCache[int32, *testproto.User](client, "complex-maps").Build()
 
 	user := &testproto.User{
 		Id:      3,
@@ -366,11 +354,7 @@ func TestComplexProtobuf_EnumFields(t *testing.T) {
 		t.Fatalf("Register schema: %v", err)
 	}
 
-	cache := hotrod.NewTypedCache[int32, *testproto.User](
-		client, "complex-enums",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.User { return &testproto.User{} },
-	)
+	cache := hotrod.NewTypedCache[int32, *testproto.User](client, "complex-enums").Build()
 
 	// Test all enum values
 	users := []*testproto.User{
@@ -424,11 +408,7 @@ func TestComplexProtobuf_OptionalFields(t *testing.T) {
 		t.Fatalf("Register schema: %v", err)
 	}
 
-	cache := hotrod.NewTypedCache[int32, *testproto.User](
-		client, "complex-optional",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.User { return &testproto.User{} },
-	)
+	cache := hotrod.NewTypedCache[int32, *testproto.User](client, "complex-optional").Build()
 
 	// User with optional fields set
 	nickname := "Johnny"
@@ -533,11 +513,7 @@ func TestComplexProtobuf_DeeplyNested(t *testing.T) {
 		t.Fatalf("Register schema: %v", err)
 	}
 
-	cache := hotrod.NewTypedCache[string, *testproto.Company](
-		client, "complex-deep",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.Company { return &testproto.Company{} },
-	)
+	cache := hotrod.NewTypedCache[string, *testproto.Company](client, "complex-deep").Build()
 
 	// Company with employees (nested Users with nested Addresses)
 	company := &testproto.Company{
@@ -654,11 +630,7 @@ func TestComplexProtobuf_OneofFields(t *testing.T) {
 		t.Fatalf("Register schema: %v", err)
 	}
 
-	cache := hotrod.NewTypedCache[string, *testproto.Contact](
-		client, "complex-oneof",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.Contact { return &testproto.Contact{} },
-	)
+	cache := hotrod.NewTypedCache[string, *testproto.Contact](client, "complex-oneof").Build()
 
 	// Contact with email (oneof)
 	contactEmail := &testproto.Contact{
@@ -775,11 +747,7 @@ func TestComplexProtobuf_EmptyCollections(t *testing.T) {
 		t.Fatalf("Register schema: %v", err)
 	}
 
-	cache := hotrod.NewTypedCache[int32, *testproto.User](
-		client, "complex-empty",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.User { return &testproto.User{} },
-	)
+	cache := hotrod.NewTypedCache[int32, *testproto.User](client, "complex-empty").Build()
 
 	// User with empty collections
 	user := &testproto.User{

@@ -41,11 +41,7 @@ func TestProtoStream_MultipleEntries(t *testing.T) {
 		t.Fatalf("Register schema: %v", err)
 	}
 
-	cache := hotrod.NewTypedCache[string, *testproto.Person](
-		client, "proto-multiple",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.Person { return &testproto.Person{} },
-	)
+	cache := hotrod.NewTypedCache[string, *testproto.Person](client, "proto-multiple").Build()
 
 	// Put multiple entries
 	people := map[string]*testproto.Person{
@@ -104,11 +100,7 @@ func TestProtoStream_UpdateOperations(t *testing.T) {
 		t.Fatalf("Register schema: %v", err)
 	}
 
-	cache := hotrod.NewTypedCache[string, *testproto.Person](
-		client, "proto-update",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.Person { return &testproto.Person{} },
-	)
+	cache := hotrod.NewTypedCache[string, *testproto.Person](client, "proto-update").Build()
 
 	// Put initial value
 	if err := cache.Put(ctx, "person1", &testproto.Person{Name: "Original", Age: 20}); err != nil {
@@ -160,11 +152,7 @@ func TestProtoStream_RemoveOperations(t *testing.T) {
 		t.Fatalf("Register schema: %v", err)
 	}
 
-	cache := hotrod.NewTypedCache[string, *testproto.Person](
-		client, "proto-remove",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.Person { return &testproto.Person{} },
-	)
+	cache := hotrod.NewTypedCache[string, *testproto.Person](client, "proto-remove").Build()
 
 	// Put value
 	if err := cache.Put(ctx, "person1", &testproto.Person{Name: "ToRemove", Age: 50}); err != nil {
@@ -210,11 +198,7 @@ func TestProtoStream_WithExpiration(t *testing.T) {
 		t.Fatalf("Register schema: %v", err)
 	}
 
-	cache := hotrod.NewTypedCache[string, *testproto.Person](
-		client, "proto-expiration",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.Person { return &testproto.Person{} },
-	)
+	cache := hotrod.NewTypedCache[string, *testproto.Person](client, "proto-expiration").Build()
 
 	// Put with lifespan
 	if err := cache.Put(ctx, "expires", &testproto.Person{Name: "Expires", Age: 1},
@@ -271,11 +255,7 @@ func TestProtoStream_ConcurrentOperations(t *testing.T) {
 		t.Fatalf("Register schema: %v", err)
 	}
 
-	cache := hotrod.NewTypedCache[string, *testproto.Person](
-		client, "proto-concurrent",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.Person { return &testproto.Person{} },
-	)
+	cache := hotrod.NewTypedCache[string, *testproto.Person](client, "proto-concurrent").Build()
 
 	// Put entries concurrently
 	const numEntries = 10
@@ -341,11 +321,7 @@ func TestProtoStream_LargeProtoMessages(t *testing.T) {
 		t.Fatalf("Register schema: %v", err)
 	}
 
-	cache := hotrod.NewTypedCache[int32, *testproto.User](
-		client, "proto-large",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.User { return &testproto.User{} },
-	)
+	cache := hotrod.NewTypedCache[int32, *testproto.User](client, "proto-large").Build()
 
 	// Create user with many fields
 	user := &testproto.User{

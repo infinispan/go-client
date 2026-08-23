@@ -16,6 +16,7 @@ A Go client for [Infinispan](https://infinispan.org/) using the Hot Rod binary p
 - Type-safe cache with Protocol Buffers marshalling
 - Cache entry event listeners (created, modified, removed, expired)
 - Queries and continuous queries with Ickle query language
+- Cache-level encoding (text/plain, JSON, protostream, octet-stream) with separate key/value media types
 - Operation flags (force return value, skip cache load, skip indexing, etc.)
 
 ## Installation
@@ -120,6 +121,21 @@ prev, err := cache.GetAndPut(ctx, key, value)
 prev, existed, err := cache.GetAndRemove(ctx, key)
 ```
 
+## Cache Encoding
+
+Set the media type to match the server-side cache encoding:
+
+```go
+// Same encoding for keys and values
+textCache := client.Cache("textCache").WithEncoding(hotrod.MediaTypeTextPlain)
+textCache.Put(ctx, []byte("key"), []byte("hello"))
+
+// Different encoding for keys and values
+cache := client.Cache("mixed").
+    WithKeyEncoding(hotrod.MediaTypeTextPlain).
+    WithValueEncoding(hotrod.MediaTypeJSON)
+```
+
 ## Typed Cache with Protocol Buffers
 
 For type-safe operations using Protocol Buffers:
@@ -134,11 +150,7 @@ import (
 client.Schemas().Register(ctx, "person.proto", personProtoContent)
 
 // Create a typed cache
-cache := hotrod.NewTypedCache[string, *pb.Person](
-	client, "people",
-	hotrod.ProtoStreamMarshaller(),
-	func() *pb.Person { return &pb.Person{} },
-)
+cache := hotrod.NewTypedCache[string, *pb.Person](client, "people").Build()
 
 cache.Put(ctx, "john", &pb.Person{Name: "John", Age: 30})
 

@@ -77,11 +77,7 @@ func TestConsistentHashWithTypedCache(t *testing.T) {
 		t.Fatalf("Register schema: %v", err)
 	}
 
-	cache := hotrod.NewTypedCache[string, *testproto.Person](
-		client, "hash-typed",
-		&hotrod.ProtoStreamMarshaller{},
-		func() *testproto.Person { return &testproto.Person{} },
-	)
+	cache := hotrod.NewTypedCache[string, *testproto.Person](client, "hash-typed").Build()
 
 	for i := 0; i < 50; i++ {
 		key := fmt.Sprintf("person-%d", i)

@@ -8,13 +8,14 @@ import (
 )
 
 type PutOp struct {
-	Cache     string
-	Key       []byte
-	Value     []byte
-	Lifespan  time.Duration
-	MaxIdle   time.Duration
-	MediaType int32
-	OpFlags   int32
+	Cache    string
+	Key      []byte
+	Value    []byte
+	Lifespan time.Duration
+	MaxIdle  time.Duration
+	KeyMT    int32
+	ValueMT  int32
+	OpFlags  int32
 }
 
 type PutResponse struct {
@@ -27,15 +28,15 @@ func (p *PutOp) CacheName() []byte    { return []byte(p.Cache) }
 func (p *PutOp) Flags() int32         { return p.OpFlags }
 
 func (p *PutOp) KeyMediaType() int32 {
-	if p.MediaType != 0 {
-		return p.MediaType
+	if p.KeyMT != 0 {
+		return p.KeyMT
 	}
 	return codec.MediaIDOctetStream
 }
 
 func (p *PutOp) ValueMediaType() int32 {
-	if p.MediaType != 0 {
-		return p.MediaType
+	if p.ValueMT != 0 {
+		return p.ValueMT
 	}
 	return codec.MediaIDOctetStream
 }
