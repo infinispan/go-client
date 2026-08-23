@@ -796,7 +796,6 @@ func unwrapEntity(data []byte) (QueryEntry, error) {
 	return QueryEntry{}, fmt.Errorf("no entity data in query result")
 }
 
-
 func wrapQueryParam(value any) ([]byte, error) {
 	switch v := value.(type) {
 	case string:

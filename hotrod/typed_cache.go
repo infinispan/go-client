@@ -71,7 +71,7 @@ func (b *TypedCacheBuilder[K, V]) Build() *TypedCache[K, V] {
 func defaultFactory[V any]() func() V {
 	var zero V
 	t := reflect.TypeOf(&zero).Elem()
-	if t.Kind() == reflect.Ptr {
+	if t.Kind() == reflect.Pointer {
 		elem := t.Elem()
 		return func() V { return reflect.New(elem).Interface().(V) }
 	}
