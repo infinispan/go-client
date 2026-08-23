@@ -232,7 +232,7 @@ func SkipMediaType(r io.Reader) error {
 	if err != nil {
 		return fmt.Errorf("skip media type param count: %w", err)
 	}
-	for i := int32(0); i < paramCount; i++ {
+	for range paramCount {
 		if _, err := ReadLPString(r); err != nil {
 			return fmt.Errorf("skip media type param key: %w", err)
 		}

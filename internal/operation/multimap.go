@@ -59,7 +59,7 @@ func (o *MultimapGetOp) DecodeResponse(status byte, r io.Reader) (any, error) {
 		return nil, err
 	}
 	values := make([][]byte, count)
-	for i := int32(0); i < count; i++ {
+	for i := range count {
 		v, err := codec.ReadLPBytes(r)
 		if err != nil {
 			return nil, err
@@ -113,7 +113,7 @@ func (o *MultimapGetWithMetadataOp) DecodeResponse(status byte, r io.Reader) (an
 		return nil, err
 	}
 	values := make([][]byte, count)
-	for i := int32(0); i < count; i++ {
+	for i := range count {
 		v, err := codec.ReadLPBytes(r)
 		if err != nil {
 			return nil, err

@@ -39,7 +39,7 @@ func ReadVInt(r io.Reader) (int32, error) {
 	var b [1]byte
 	var result uint32
 	var shift uint
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		if _, err := io.ReadFull(r, b[:]); err != nil {
 			return 0, fmt.Errorf("read vint: %w", err)
 		}
@@ -56,7 +56,7 @@ func ReadVLong(r io.Reader) (int64, error) {
 	var b [1]byte
 	var result uint64
 	var shift uint
-	for i := 0; i < 9; i++ {
+	for range 9 {
 		if _, err := io.ReadFull(r, b[:]); err != nil {
 			return 0, fmt.Errorf("read vlong: %w", err)
 		}

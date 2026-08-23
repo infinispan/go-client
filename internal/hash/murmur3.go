@@ -20,7 +20,7 @@ func murmurHash3x64_64(key []byte, seed uint64) uint64 {
 	c2 := uint64(0x4cf5ad432745937f)
 
 	nblocks := len(key) / 16
-	for i := 0; i < nblocks; i++ {
+	for i := range nblocks {
 		k1 := binary.LittleEndian.Uint64(key[i*16:])
 		k2 := binary.LittleEndian.Uint64(key[i*16+8:])
 		h1, h2, c1, c2 = bmix(h1, h2, k1, k2, c1, c2)

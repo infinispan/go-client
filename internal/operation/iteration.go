@@ -95,7 +95,7 @@ func (o *IterationNextOp) DecodeResponse(status byte, r io.Reader) (any, error) 
 	}
 
 	entries := make([]IterEntry, entriesSize)
-	for i := int32(0); i < entriesSize; i++ {
+	for i := range entriesSize {
 		metaFlag, err := codec.ReadU1(r)
 		if err != nil {
 			return nil, fmt.Errorf("read entry %d meta flag: %w", i, err)

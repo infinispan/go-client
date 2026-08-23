@@ -25,7 +25,7 @@ func (a *AuthMechListOp) DecodeResponse(status byte, r io.Reader) (any, error) {
 		return nil, err
 	}
 	mechs := make([]string, count)
-	for i := int32(0); i < count; i++ {
+	for i := range count {
 		s, err := codec.ReadLPString(r)
 		if err != nil {
 			return nil, err

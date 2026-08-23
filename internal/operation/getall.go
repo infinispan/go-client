@@ -41,7 +41,7 @@ func (o *GetAllOp) DecodeResponse(_ byte, r io.Reader) (any, error) {
 		return nil, err
 	}
 	entries := make([]GetAllEntry, count)
-	for i := int32(0); i < count; i++ {
+	for i := range count {
 		key, err := codec.ReadLPBytes(r)
 		if err != nil {
 			return nil, err

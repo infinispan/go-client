@@ -141,7 +141,7 @@ func readTopologyUpdate(r io.Reader, clientIntelligence byte) (*TopologyUpdate, 
 		return nil, fmt.Errorf("read num servers: %w", err)
 	}
 	servers := make([]ServerAddress, numServers)
-	for i := int32(0); i < numServers; i++ {
+	for i := range numServers {
 		host, err := ReadLPString(r)
 		if err != nil {
 			return nil, fmt.Errorf("read server %d host: %w", i, err)
@@ -170,7 +170,7 @@ func readTopologyUpdate(r io.Reader, clientIntelligence byte) (*TopologyUpdate, 
 
 		if hashVersion > 0 {
 			segmentOwners := make([][]int, numSegments)
-			for i := int32(0); i < numSegments; i++ {
+			for i := range numSegments {
 				numOwners, err := ReadU1(r)
 				if err != nil {
 					return nil, fmt.Errorf("read segment %d num owners: %w", i, err)

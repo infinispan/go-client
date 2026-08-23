@@ -27,7 +27,7 @@ func (o *StatsOp) DecodeResponse(_ byte, r io.Reader) (any, error) {
 		return nil, err
 	}
 	stats := make(map[string]string, count)
-	for i := int32(0); i < count; i++ {
+	for range count {
 		name, err := codec.ReadLPString(r)
 		if err != nil {
 			return nil, err

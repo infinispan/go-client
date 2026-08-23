@@ -39,7 +39,7 @@ func (p *PingOp) DecodeResponse(status byte, r io.Reader) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	for i := int32(0); i < opCount; i++ {
+	for range opCount {
 		if _, err := codec.ReadU2(r); err != nil {
 			return nil, err
 		}
