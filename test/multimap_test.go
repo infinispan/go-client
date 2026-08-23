@@ -29,7 +29,7 @@ func TestMultimap_PutAndGet(t *testing.T) {
 
 	mm := client.Multimap("mm-putget")
 
-	if err := mm.Put(ctx, []byte("colors"), []byte("red"), []byte("blue"), []byte("green")); err != nil {
+	if err := mm.Put(ctx, []byte("colors"), [][]byte{[]byte("red"), []byte("blue"), []byte("green")}); err != nil {
 		t.Fatalf("Put: %v", err)
 	}
 
@@ -97,7 +97,7 @@ func TestMultimap_RemoveKey(t *testing.T) {
 
 	mm := client.Multimap("mm-rmkey")
 
-	_ = mm.Put(ctx, []byte("k"), []byte("v1"), []byte("v2"))
+	_ = mm.Put(ctx, []byte("k"), [][]byte{[]byte("v1"), []byte("v2")})
 
 	removed, err := mm.RemoveKey(ctx, []byte("k"))
 	if err != nil {
@@ -140,7 +140,7 @@ func TestMultimap_RemoveEntry(t *testing.T) {
 
 	mm := client.Multimap("mm-rment")
 
-	_ = mm.Put(ctx, []byte("k"), []byte("v1"), []byte("v2"))
+	_ = mm.Put(ctx, []byte("k"), [][]byte{[]byte("v1"), []byte("v2")})
 
 	removed, err := mm.RemoveEntry(ctx, []byte("k"), []byte("v1"))
 	if err != nil {
@@ -181,7 +181,7 @@ func TestMultimap_HasKey(t *testing.T) {
 		t.Error("expected false before put")
 	}
 
-	_ = mm.Put(ctx, []byte("k"), []byte("v"))
+	_ = mm.Put(ctx, []byte("k"), [][]byte{[]byte("v")})
 
 	ok, err = mm.HasKey(ctx, []byte("k"))
 	if err != nil {
@@ -211,7 +211,7 @@ func TestMultimap_HasValue(t *testing.T) {
 
 	mm := client.Multimap("mm-cv")
 
-	_ = mm.Put(ctx, []byte("k"), []byte("v1"))
+	_ = mm.Put(ctx, []byte("k"), [][]byte{[]byte("v1")})
 
 	ok, err := mm.HasValue(ctx, []byte("v1"))
 	if err != nil {
@@ -246,7 +246,7 @@ func TestMultimap_HasEntry(t *testing.T) {
 
 	mm := client.Multimap("mm-ce")
 
-	_ = mm.Put(ctx, []byte("k"), []byte("v1"), []byte("v2"))
+	_ = mm.Put(ctx, []byte("k"), [][]byte{[]byte("v1"), []byte("v2")})
 
 	ok, err := mm.HasEntry(ctx, []byte("k"), []byte("v1"))
 	if err != nil {
@@ -289,8 +289,8 @@ func TestMultimap_Size(t *testing.T) {
 		t.Errorf("expected 0, got %d", size)
 	}
 
-	_ = mm.Put(ctx, []byte("k1"), []byte("v1"), []byte("v2"))
-	_ = mm.Put(ctx, []byte("k2"), []byte("v3"))
+	_ = mm.Put(ctx, []byte("k1"), [][]byte{[]byte("v1"), []byte("v2")})
+	_ = mm.Put(ctx, []byte("k2"), [][]byte{[]byte("v3")})
 
 	size, err = mm.Size(ctx)
 	if err != nil {

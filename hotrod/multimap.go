@@ -69,12 +69,7 @@ func (mc *MultimapCache) GetWithMetadata(ctx context.Context, key []byte) (*Mult
 }
 
 // Put adds one or more values for a key. Each value is stored as a separate entry.
-func (mc *MultimapCache) Put(ctx context.Context, key []byte, values ...[]byte) error {
-	return mc.PutWithOptions(ctx, key, values, nil)
-}
-
-// PutWithOptions adds one or more values for a key with expiration options.
-func (mc *MultimapCache) PutWithOptions(ctx context.Context, key []byte, values [][]byte, opts []PutOption) error {
+func (mc *MultimapCache) Put(ctx context.Context, key []byte, values [][]byte, opts ...PutOption) error {
 	cfg := &putConfig{}
 	for _, o := range opts {
 		o(cfg)
