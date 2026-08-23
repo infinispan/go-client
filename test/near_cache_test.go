@@ -35,7 +35,7 @@ func TestNearCache_GetCachesLocally(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewNearCache: %v", err)
 	}
-	defer nc.Close(ctx)
+	defer nc.Close()
 
 	// First get — cache miss, fetches from server
 	val, found, err := nc.Get(ctx, []byte("k1"))
@@ -77,7 +77,7 @@ func TestNearCache_PutInvalidatesLocal(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewNearCache: %v", err)
 	}
-	defer nc.Close(ctx)
+	defer nc.Close()
 
 	// Put and populate near cache via get
 	if err := nc.Put(ctx, []byte("k1"), []byte("v1")); err != nil {
@@ -134,7 +134,7 @@ func TestNearCache_RemoteUpdateInvalidates(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewNearCache: %v", err)
 	}
-	defer nc.Close(ctx)
+	defer nc.Close()
 
 	val, found, err := nc.Get(ctx, []byte("k1"))
 	if err != nil {
@@ -189,7 +189,7 @@ func TestNearCache_RemoveInvalidatesLocal(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewNearCache: %v", err)
 	}
-	defer nc.Close(ctx)
+	defer nc.Close()
 
 	// Put and populate near cache
 	if err := nc.Put(ctx, []byte("k1"), []byte("v1")); err != nil {

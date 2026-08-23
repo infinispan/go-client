@@ -113,13 +113,13 @@ func (nc *NearCache) Remove(ctx context.Context, key []byte, opts ...RemoveOptio
 }
 
 // Close removes the server-side listener and clears the local cache.
-func (nc *NearCache) Close(ctx context.Context) error {
+func (nc *NearCache) Close() error {
 	close(nc.done)
 	op := &operation.RemoveClientListenerOp{
 		Cache:      nc.remote.name,
 		ListenerID: nc.listenerID,
 	}
-	err := nc.remote.client.pool.RemoveListener(ctx, op)
+	err := nc.remote.client.pool.RemoveListener(context.Background(), op)
 	nc.store.Clear()
 	return err
 }
