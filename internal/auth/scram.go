@@ -37,7 +37,7 @@ func NewScramSHA256(username, password string) *ScramSHA256 {
 
 func (s *ScramSHA256) Name() string            { return "SCRAM-SHA-256" }
 func (s *ScramSHA256) HasInitialResponse() bool { return true }
-func (s *ScramSHA256) IsComplete() bool         { return s.state == scramStateComplete }
+func (s *ScramSHA256) Complete() bool         { return s.state == scramStateComplete }
 func (s *ScramSHA256) Username() string         { return s.username }
 func (s *ScramSHA256) Password() string         { return s.password }
 

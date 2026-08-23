@@ -122,7 +122,7 @@ func (p *Pool) routeOperation(op operation.Operation) string {
 		ch := p.consistentHashes[string(op.CacheName())]
 		p.mu.RUnlock()
 		if ch != nil {
-			if addr := ch.GetPrimaryOwner(keyed.KeyBytes()); addr != "" {
+			if addr := ch.PrimaryOwner(keyed.KeyBytes()); addr != "" {
 				return addr
 			}
 		}

@@ -32,8 +32,8 @@ func TestOAuthBearerInitialResponse(t *testing.T) {
 		t.Errorf("InitialResponse() = %q, want %q", resp, expected)
 	}
 
-	if !m.IsComplete() {
-		t.Error("expected IsComplete() = true after InitialResponse")
+	if !m.Complete() {
+		t.Error("expected Complete() = true after InitialResponse")
 	}
 }
 

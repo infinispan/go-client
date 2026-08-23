@@ -162,8 +162,18 @@ func buildCQParams(query string, params []cqParam) [][]byte {
 			result = append(result, protostream.WrapString(v))
 		case int32:
 			result = append(result, protostream.WrapInt32(v))
+		case int:
+			result = append(result, protostream.WrapInt32(int32(v)))
 		case int64:
 			result = append(result, protostream.WrapInt64(v))
+		case float32:
+			result = append(result, protostream.WrapFloat(v))
+		case float64:
+			result = append(result, protostream.WrapDouble(v))
+		case bool:
+			result = append(result, protostream.WrapBool(v))
+		case []float32:
+			result = append(result, protostream.WrapFloatArray(v))
 		}
 	}
 	return result

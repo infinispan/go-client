@@ -16,7 +16,7 @@ func NewConsistentHash(numSegments int, segmentOwners [][]string) *ConsistentHas
 	}
 }
 
-func (ch *ConsistentHash) GetPrimaryOwner(key []byte) string {
+func (ch *ConsistentHash) PrimaryOwner(key []byte) string {
 	normalizedHash := int(Hash(key)) & math.MaxInt32
 	segment := normalizedHash / ch.segmentSize
 	if segment >= ch.numSegments {

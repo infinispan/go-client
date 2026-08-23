@@ -5,5 +5,5 @@ type Mechanism interface {
 	HasInitialResponse() bool
 	InitialResponse() ([]byte, error)
 	EvaluateChallenge(challenge []byte) ([]byte, error)
-	IsComplete() bool
+	Complete() bool
 }

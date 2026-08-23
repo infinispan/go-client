@@ -509,7 +509,7 @@ func TestBasicSize(t *testing.T) {
 	}
 }
 
-func TestBasicContainsKey(t *testing.T) {
+func TestBasicHas(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
 	}
@@ -521,9 +521,9 @@ func TestBasicContainsKey(t *testing.T) {
 	ctx := context.Background()
 
 	// Key doesn't exist initially
-	exists, err := cache.ContainsKey(ctx, []byte("testkey"))
+	exists, err := cache.Has(ctx, []byte("testkey"))
 	if err != nil {
-		t.Fatalf("ContainsKey before put: %v", err)
+		t.Fatalf("Has before put: %v", err)
 	}
 	if exists {
 		t.Error("expected key not to exist")
@@ -536,9 +536,9 @@ func TestBasicContainsKey(t *testing.T) {
 	}
 
 	// Key should exist now
-	exists, err = cache.ContainsKey(ctx, []byte("testkey"))
+	exists, err = cache.Has(ctx, []byte("testkey"))
 	if err != nil {
-		t.Fatalf("ContainsKey after put: %v", err)
+		t.Fatalf("Has after put: %v", err)
 	}
 	if !exists {
 		t.Error("expected key to exist")
@@ -551,9 +551,9 @@ func TestBasicContainsKey(t *testing.T) {
 	}
 
 	// Key should not exist anymore
-	exists, err = cache.ContainsKey(ctx, []byte("testkey"))
+	exists, err = cache.Has(ctx, []byte("testkey"))
 	if err != nil {
-		t.Fatalf("ContainsKey after remove: %v", err)
+		t.Fatalf("Has after remove: %v", err)
 	}
 	if exists {
 		t.Error("expected key not to exist after removal")

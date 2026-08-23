@@ -14,7 +14,7 @@ func TestSegmentSize(t *testing.T) {
 	}
 }
 
-func TestGetPrimaryOwner(t *testing.T) {
+func TestPrimaryOwner(t *testing.T) {
 	owners := make([][]string, 256)
 	for i := range owners {
 		owners[i] = []string{fmt.Sprintf("server-%d", i%3)}
@@ -22,27 +22,27 @@ func TestGetPrimaryOwner(t *testing.T) {
 	ch := NewConsistentHash(256, owners)
 
 	key := []byte("hello")
-	addr := ch.GetPrimaryOwner(key)
+	addr := ch.PrimaryOwner(key)
 	if addr == "" {
 		t.Fatal("expected non-empty address")
 	}
 
 	// Verify determinism
 	for i := 0; i < 100; i++ {
-		if got := ch.GetPrimaryOwner(key); got != addr {
+		if got := ch.PrimaryOwner(key); got != addr {
 			t.Fatalf("non-deterministic: got %q, want %q", got, addr)
 		}
 	}
 }
 
-func TestGetPrimaryOwnerEmptySegment(t *testing.T) {
+func TestPrimaryOwnerEmptySegment(t *testing.T) {
 	owners := make([][]string, 256)
 	for i := range owners {
 		owners[i] = []string{}
 	}
 	ch := NewConsistentHash(256, owners)
 
-	addr := ch.GetPrimaryOwner([]byte("key"))
+	addr := ch.PrimaryOwner([]byte("key"))
 	if addr != "" {
 		t.Errorf("expected empty addr for empty segment, got %q", addr)
 	}
@@ -60,7 +60,7 @@ func TestSegmentDistribution(t *testing.T) {
 	numKeys := 10000
 	for i := 0; i < numKeys; i++ {
 		key := []byte(fmt.Sprintf("key-%d", i))
-		addr := ch.GetPrimaryOwner(key)
+		addr := ch.PrimaryOwner(key)
 		counts[addr]++
 	}
 

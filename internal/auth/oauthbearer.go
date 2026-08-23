@@ -15,7 +15,7 @@ func NewOAuthBearer(token string) *OAuthBearer {
 
 func (o *OAuthBearer) Name() string            { return "OAUTHBEARER" }
 func (o *OAuthBearer) HasInitialResponse() bool { return true }
-func (o *OAuthBearer) IsComplete() bool         { return o.complete }
+func (o *OAuthBearer) Complete() bool         { return o.complete }
 func (o *OAuthBearer) Token() string            { return o.token }
 
 func (o *OAuthBearer) InitialResponse() ([]byte, error) {

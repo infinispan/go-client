@@ -433,8 +433,8 @@ func (rc *RemoteCache) ReplaceWithPrevious(ctx context.Context, key, value []byt
 	return resp.PreviousValue, resp.Success, nil
 }
 
-// ContainsKey returns true if the cache contains an entry for the given key.
-func (rc *RemoteCache) ContainsKey(ctx context.Context, key []byte) (bool, error) {
+// Has returns true if the cache contains an entry for the given key.
+func (rc *RemoteCache) Has(ctx context.Context, key []byte) (bool, error) {
 	return execute[bool](ctx, rc.client.pool, &operation.ContainsKeyOp{
 		Cache: rc.name,
 		Key:   key,
@@ -480,7 +480,7 @@ func (rc *RemoteCache) PutAll(ctx context.Context, entries map[string][]byte, op
 		keyBytes := []byte(k)
 		addr := ""
 		if ch != nil {
-			addr = ch.GetPrimaryOwner(keyBytes)
+			addr = ch.PrimaryOwner(keyBytes)
 		}
 		groups[addr] = append(groups[addr], operation.PutAllEntry{Key: keyBytes, Value: v})
 	}
@@ -553,7 +553,7 @@ func (rc *RemoteCache) GetAll(ctx context.Context, keys []string) (map[string][]
 		keyBytes := []byte(k)
 		addr := ""
 		if ch != nil {
-			addr = ch.GetPrimaryOwner(keyBytes)
+			addr = ch.PrimaryOwner(keyBytes)
 		}
 		groups[addr] = append(groups[addr], keyBytes)
 	}

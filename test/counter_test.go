@@ -355,18 +355,18 @@ func TestCounter_NameAndConfiguration(t *testing.T) {
 	}
 
 	// Check if counter is defined
-	isDefined, err := client.Counters().IsDefined(ctx, counterName)
+	isDefined, err := client.Counters().Defined(ctx, counterName)
 	if err != nil {
-		t.Fatalf("IsDefined: %v", err)
+		t.Fatalf("Defined: %v", err)
 	}
 	if !isDefined {
 		t.Error("expected counter to be defined")
 	}
 
 	// Get configuration
-	retrievedCfg, err := client.Counters().GetConfiguration(ctx, counterName)
+	retrievedCfg, err := client.Counters().Configuration(ctx, counterName)
 	if err != nil {
-		t.Fatalf("GetConfiguration: %v", err)
+		t.Fatalf("Configuration: %v", err)
 	}
 	if retrievedCfg == nil {
 		t.Fatal("expected configuration to be returned")
@@ -437,9 +437,9 @@ func TestCounter_Remove(t *testing.T) {
 	}
 
 	// Verify counter still exists
-	isDefined, err := client.Counters().IsDefined(ctx, counterName)
+	isDefined, err := client.Counters().Defined(ctx, counterName)
 	if err != nil {
-		t.Fatalf("IsDefined after remove: %v", err)
+		t.Fatalf("Defined after remove: %v", err)
 	}
 	if !isDefined {
 		t.Error("expected counter to still be defined after removal")

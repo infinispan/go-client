@@ -114,8 +114,8 @@ func (mc *MultimapCache) RemoveEntry(ctx context.Context, key, value []byte) (bo
 	})
 }
 
-// ContainsKey reports whether the multimap contains any values for the given key.
-func (mc *MultimapCache) ContainsKey(ctx context.Context, key []byte) (bool, error) {
+// HasKey reports whether the multimap contains any values for the given key.
+func (mc *MultimapCache) HasKey(ctx context.Context, key []byte) (bool, error) {
 	return execute[bool](ctx, mc.client.pool, &operation.MultimapContainsKeyOp{
 		Cache:              mc.name,
 		Key:                key,
@@ -123,8 +123,8 @@ func (mc *MultimapCache) ContainsKey(ctx context.Context, key []byte) (bool, err
 	})
 }
 
-// ContainsValue reports whether the multimap contains the given value under any key.
-func (mc *MultimapCache) ContainsValue(ctx context.Context, value []byte) (bool, error) {
+// HasValue reports whether the multimap contains the given value under any key.
+func (mc *MultimapCache) HasValue(ctx context.Context, value []byte) (bool, error) {
 	return execute[bool](ctx, mc.client.pool, &operation.MultimapContainsValueOp{
 		Cache:              mc.name,
 		Value:              value,
@@ -132,8 +132,8 @@ func (mc *MultimapCache) ContainsValue(ctx context.Context, value []byte) (bool,
 	})
 }
 
-// ContainsEntry reports whether the multimap contains the specific key-value pair.
-func (mc *MultimapCache) ContainsEntry(ctx context.Context, key, value []byte) (bool, error) {
+// HasEntry reports whether the multimap contains the specific key-value pair.
+func (mc *MultimapCache) HasEntry(ctx context.Context, key, value []byte) (bool, error) {
 	return execute[bool](ctx, mc.client.pool, &operation.MultimapContainsEntryOp{
 		Cache:              mc.name,
 		Key:                key,

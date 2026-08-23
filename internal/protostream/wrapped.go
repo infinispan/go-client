@@ -17,12 +17,25 @@ const (
 
 // WrappedMessage field numbers (from org.infinispan.protostream.WrappedMessage).
 const (
-	fieldWrappedFloat              = 2
-	fieldWrappedInt32              = 5
-	fieldWrappedInt64              = 3
-	fieldWrappedString             = 9
+	fieldWrappedDouble    = 1
+	fieldWrappedFloat     = 2
+	fieldWrappedInt64     = 3
+	fieldWrappedUInt64    = 4
+	fieldWrappedInt32     = 5
+	fieldWrappedFixed64   = 6
+	fieldWrappedFixed32   = 7
+	fieldWrappedBool      = 8
+	fieldWrappedString    = 9
+	fieldWrappedBytes     = 10
+	fieldWrappedUInt32    = 11
+	fieldWrappedSFixed32  = 12
+	fieldWrappedSFixed64  = 13
+	fieldWrappedSInt32    = 14
+	fieldWrappedSInt64    = 15
+
 	fieldWrappedDescriptorFullName = 16
 	fieldWrappedMessage            = 17
+	fieldWrappedEnum               = 18
 	fieldWrappedDescriptorTypeID   = 19
 
 	fieldWrappedContainerSize     = 27
@@ -73,24 +86,46 @@ func WrapByTypeID(messageBytes []byte, typeID int32) []byte {
 	return dst
 }
 
-// WrapBool wraps a bool value in a WrappedMessage (field 1 = wrappedBool).
+// WrapBool wraps a bool value in a WrappedMessage (field 8).
 func WrapBool(v bool) []byte {
 	val := uint64(0)
 	if v {
 		val = 1
 	}
-	dst := make([]byte, 0, tagSize(1)+1)
-	dst = appendVarintField(dst, 1, val)
+	dst := make([]byte, 0, tagSize(fieldWrappedBool)+1)
+	dst = appendVarintField(dst, fieldWrappedBool, val)
 	return dst
 }
 
-// WrapDouble wraps a float64 value in a WrappedMessage (field 6 = wrappedDouble).
+// WrapDouble wraps a float64 value in a WrappedMessage (field 1).
 func WrapDouble(v float64) []byte {
-	dst := make([]byte, 0, tagSize(6)+8)
-	dst = appendTag(dst, 6, wireFixed64)
+	dst := make([]byte, 0, tagSize(fieldWrappedDouble)+8)
+	dst = appendTag(dst, fieldWrappedDouble, wireFixed64)
 	var buf [8]byte
 	binary.LittleEndian.PutUint64(buf[:], math.Float64bits(v))
 	dst = append(dst, buf[:]...)
+	return dst
+}
+
+// WrapBytes wraps a byte slice in a WrappedMessage (field 10).
+func WrapBytes(v []byte) []byte {
+	size := tagSize(fieldWrappedBytes) + lenDelimitedSize(len(v))
+	dst := make([]byte, 0, size)
+	dst = appendLenDelimited(dst, fieldWrappedBytes, v)
+	return dst
+}
+
+// WrapUInt32 wraps a uint32 value in a WrappedMessage (field 11).
+func WrapUInt32(v uint32) []byte {
+	dst := make([]byte, 0, tagSize(fieldWrappedUInt32)+binary.MaxVarintLen32)
+	dst = appendVarintField(dst, fieldWrappedUInt32, uint64(v))
+	return dst
+}
+
+// WrapUInt64 wraps a uint64 value in a WrappedMessage (field 4).
+func WrapUInt64(v uint64) []byte {
+	dst := make([]byte, 0, tagSize(fieldWrappedUInt64)+binary.MaxVarintLen64)
+	dst = appendVarintField(dst, fieldWrappedUInt64, v)
 	return dst
 }
 
@@ -241,41 +276,87 @@ func UnwrapBytes(data []byte) ([]byte, error) {
 }
 
 // UnwrapValue extracts a typed Go value from a WrappedMessage by inspecting which
-// field is set. Returns bool, float32, int64, int32, float64, string, or []byte.
+// field is set. Returns float64, float32, int64, uint64, int32, uint32, bool, string, or []byte.
 func UnwrapValue(data []byte) (any, error) {
 	var result any
 	err := ScanFields(data, func(fieldNumber int, wireType int, value []byte) error {
 		switch fieldNumber {
-		case 1: // wrappedBool
-			v, n := decodeUvarint(value)
-			if n <= 0 {
-				return errors.New("UnwrapValue: invalid bool varint")
+		case fieldWrappedDouble: // 1 - fixed64
+			if len(value) != 8 {
+				return fmt.Errorf("UnwrapValue: expected 8 bytes for double, got %d", len(value))
 			}
-			result = v != 0
-		case fieldWrappedFloat: // 2
+			result = math.Float64frombits(binary.LittleEndian.Uint64(value))
+		case fieldWrappedFloat: // 2 - fixed32
 			if len(value) != 4 {
 				return fmt.Errorf("UnwrapValue: expected 4 bytes for float, got %d", len(value))
 			}
 			result = math.Float32frombits(binary.LittleEndian.Uint32(value))
-		case fieldWrappedInt64: // 3
+		case fieldWrappedInt64: // 3 - varint
 			v, n := decodeUvarint(value)
 			if n <= 0 {
 				return errors.New("UnwrapValue: invalid int64 varint")
 			}
 			result = int64(v)
-		case fieldWrappedInt32: // 5
+		case fieldWrappedUInt64: // 4 - varint
+			v, n := decodeUvarint(value)
+			if n <= 0 {
+				return errors.New("UnwrapValue: invalid uint64 varint")
+			}
+			result = v
+		case fieldWrappedInt32: // 5 - varint
 			v, n := decodeUvarint(value)
 			if n <= 0 {
 				return errors.New("UnwrapValue: invalid int32 varint")
 			}
 			result = int32(v)
-		case 6: // wrappedDouble
+		case fieldWrappedFixed64: // 6 - fixed64
 			if len(value) != 8 {
-				return fmt.Errorf("UnwrapValue: expected 8 bytes for double, got %d", len(value))
+				return fmt.Errorf("UnwrapValue: expected 8 bytes for fixed64, got %d", len(value))
 			}
-			result = math.Float64frombits(binary.LittleEndian.Uint64(value))
+			result = binary.LittleEndian.Uint64(value)
+		case fieldWrappedFixed32: // 7 - fixed32
+			if len(value) != 4 {
+				return fmt.Errorf("UnwrapValue: expected 4 bytes for fixed32, got %d", len(value))
+			}
+			result = binary.LittleEndian.Uint32(value)
+		case fieldWrappedBool: // 8 - varint
+			v, n := decodeUvarint(value)
+			if n <= 0 {
+				return errors.New("UnwrapValue: invalid bool varint")
+			}
+			result = v != 0
 		case fieldWrappedString: // 9
 			result = string(value)
+		case fieldWrappedBytes: // 10
+			result = append([]byte(nil), value...)
+		case fieldWrappedUInt32: // 11 - varint
+			v, n := decodeUvarint(value)
+			if n <= 0 {
+				return errors.New("UnwrapValue: invalid uint32 varint")
+			}
+			result = uint32(v)
+		case fieldWrappedSFixed32: // 12 - fixed32
+			if len(value) != 4 {
+				return fmt.Errorf("UnwrapValue: expected 4 bytes for sfixed32, got %d", len(value))
+			}
+			result = int32(binary.LittleEndian.Uint32(value))
+		case fieldWrappedSFixed64: // 13 - fixed64
+			if len(value) != 8 {
+				return fmt.Errorf("UnwrapValue: expected 8 bytes for sfixed64, got %d", len(value))
+			}
+			result = int64(binary.LittleEndian.Uint64(value))
+		case fieldWrappedSInt32: // 14 - varint (zigzag)
+			v, n := decodeUvarint(value)
+			if n <= 0 {
+				return errors.New("UnwrapValue: invalid sint32 varint")
+			}
+			result = int32(decodeZigZag32(v))
+		case fieldWrappedSInt64: // 15 - varint (zigzag)
+			v, n := decodeUvarint(value)
+			if n <= 0 {
+				return errors.New("UnwrapValue: invalid sint64 varint")
+			}
+			result = decodeZigZag64(v)
 		case fieldWrappedMessage: // 17
 			result = append([]byte(nil), value...)
 		}
@@ -288,6 +369,14 @@ func UnwrapValue(data []byte) (any, error) {
 		return nil, errors.New("UnwrapValue: no recognized value field found")
 	}
 	return result, nil
+}
+
+func decodeZigZag32(v uint64) int32 {
+	return int32(uint32(v)>>1) ^ -int32(uint32(v)&1)
+}
+
+func decodeZigZag64(v uint64) int64 {
+	return int64(v>>1) ^ -int64(v&1)
 }
 
 // CQResultType represents the type of a continuous query result.

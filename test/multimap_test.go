@@ -157,7 +157,7 @@ func TestMultimap_RemoveEntry(t *testing.T) {
 	}
 }
 
-func TestMultimap_ContainsKey(t *testing.T) {
+func TestMultimap_HasKey(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
 	}
@@ -176,23 +176,23 @@ func TestMultimap_ContainsKey(t *testing.T) {
 
 	mm := client.Multimap("mm-ck")
 
-	ok, _ := mm.ContainsKey(ctx, []byte("k"))
+	ok, _ := mm.HasKey(ctx, []byte("k"))
 	if ok {
 		t.Error("expected false before put")
 	}
 
 	_ = mm.Put(ctx, []byte("k"), []byte("v"))
 
-	ok, err = mm.ContainsKey(ctx, []byte("k"))
+	ok, err = mm.HasKey(ctx, []byte("k"))
 	if err != nil {
-		t.Fatalf("ContainsKey: %v", err)
+		t.Fatalf("HasKey: %v", err)
 	}
 	if !ok {
 		t.Error("expected true after put")
 	}
 }
 
-func TestMultimap_ContainsValue(t *testing.T) {
+func TestMultimap_HasValue(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
 	}
@@ -213,21 +213,21 @@ func TestMultimap_ContainsValue(t *testing.T) {
 
 	_ = mm.Put(ctx, []byte("k"), []byte("v1"))
 
-	ok, err := mm.ContainsValue(ctx, []byte("v1"))
+	ok, err := mm.HasValue(ctx, []byte("v1"))
 	if err != nil {
-		t.Fatalf("ContainsValue: %v", err)
+		t.Fatalf("HasValue: %v", err)
 	}
 	if !ok {
 		t.Error("expected true for existing value")
 	}
 
-	ok, _ = mm.ContainsValue(ctx, []byte("v999"))
+	ok, _ = mm.HasValue(ctx, []byte("v999"))
 	if ok {
 		t.Error("expected false for missing value")
 	}
 }
 
-func TestMultimap_ContainsEntry(t *testing.T) {
+func TestMultimap_HasEntry(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
 	}
@@ -248,15 +248,15 @@ func TestMultimap_ContainsEntry(t *testing.T) {
 
 	_ = mm.Put(ctx, []byte("k"), []byte("v1"), []byte("v2"))
 
-	ok, err := mm.ContainsEntry(ctx, []byte("k"), []byte("v1"))
+	ok, err := mm.HasEntry(ctx, []byte("k"), []byte("v1"))
 	if err != nil {
-		t.Fatalf("ContainsEntry: %v", err)
+		t.Fatalf("HasEntry: %v", err)
 	}
 	if !ok {
 		t.Error("expected true for existing entry")
 	}
 
-	ok, _ = mm.ContainsEntry(ctx, []byte("k"), []byte("v999"))
+	ok, _ = mm.HasEntry(ctx, []byte("k"), []byte("v999"))
 	if ok {
 		t.Error("expected false for missing entry")
 	}

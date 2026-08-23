@@ -64,15 +64,15 @@ func (cm *CounterManager) Define(ctx context.Context, name string, config *Count
 	})
 }
 
-// IsDefined reports whether a counter with the given name exists.
-func (cm *CounterManager) IsDefined(ctx context.Context, name string) (bool, error) {
+// Defined reports whether a counter with the given name exists.
+func (cm *CounterManager) Defined(ctx context.Context, name string) (bool, error) {
 	return execute[bool](ctx, cm.client.pool, &operation.CounterIsDefinedOp{
 		Name: name,
 	})
 }
 
-// GetConfiguration returns the configuration of a named counter, or nil if it does not exist.
-func (cm *CounterManager) GetConfiguration(ctx context.Context, name string) (*CounterConfiguration, error) {
+// Configuration returns the configuration of a named counter, or nil if it does not exist.
+func (cm *CounterManager) Configuration(ctx context.Context, name string) (*CounterConfiguration, error) {
 	return execute[*CounterConfiguration](ctx, cm.client.pool, &operation.CounterGetConfigurationOp{
 		Name: name,
 	})

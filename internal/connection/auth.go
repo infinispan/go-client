@@ -43,7 +43,7 @@ func (c *Conn) Authenticate(ctx context.Context, mech auth.Mechanism) error {
 		}
 		resp := authResult.(*operation.AuthResponse)
 		if resp.Completed {
-			if !mech.IsComplete() {
+			if !mech.Complete() {
 				_, err = mech.EvaluateChallenge(resp.Challenge)
 				if err != nil {
 					return fmt.Errorf("verify server: %w", err)
@@ -55,7 +55,7 @@ func (c *Conn) Authenticate(ctx context.Context, mech auth.Mechanism) error {
 		if err != nil {
 			return fmt.Errorf("evaluate challenge: %w", err)
 		}
-		if mech.IsComplete() {
+		if mech.Complete() {
 			return nil
 		}
 	}

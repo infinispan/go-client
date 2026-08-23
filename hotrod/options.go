@@ -231,8 +231,8 @@ type multimapConfig struct {
 	supportsDuplicates bool
 }
 
-// WithSupportsDuplicates controls whether the multimap allows duplicate key-value pairs.
-func WithSupportsDuplicates(b bool) MultimapOption {
+// WithDuplicates controls whether the multimap allows duplicate key-value pairs.
+func WithDuplicates(b bool) MultimapOption {
 	return func(cfg *multimapConfig) {
 		cfg.supportsDuplicates = b
 	}

@@ -451,7 +451,7 @@ func TestExpiration_Size(t *testing.T) {
 	}
 }
 
-func TestExpiration_ContainsKey(t *testing.T) {
+func TestExpiration_Has(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
 	}
@@ -469,9 +469,9 @@ func TestExpiration_ContainsKey(t *testing.T) {
 	}
 
 	// Should contain key
-	exists, err := cache.ContainsKey(ctx, []byte("key1"))
+	exists, err := cache.Has(ctx, []byte("key1"))
 	if err != nil {
-		t.Fatalf("ContainsKey before expiry: %v", err)
+		t.Fatalf("Has before expiry: %v", err)
 	}
 	if !exists {
 		t.Error("expected key to exist before expiry")
@@ -481,9 +481,9 @@ func TestExpiration_ContainsKey(t *testing.T) {
 	time.Sleep(3 * time.Second)
 
 	// Should not contain key
-	exists, err = cache.ContainsKey(ctx, []byte("key1"))
+	exists, err = cache.Has(ctx, []byte("key1"))
 	if err != nil {
-		t.Fatalf("ContainsKey after expiry: %v", err)
+		t.Fatalf("Has after expiry: %v", err)
 	}
 	if exists {
 		t.Error("expected key not to exist after expiry")
