@@ -15,10 +15,10 @@ type IteratorMetadata struct {
 	Version  int64
 }
 
-// CloseableIterator iterates over cache entries fetched in batches from the
+// Iterator iterates over cache entries fetched in batches from the
 // server. It must be closed when no longer needed to release the server-side
 // cursor. It is not safe for concurrent use.
-type CloseableIterator struct {
+type Iterator struct {
 	client      *Client
 	cacheName   string
 	iterationID string
@@ -36,7 +36,7 @@ type CloseableIterator struct {
 // Next advances the iterator to the next entry. It returns false when the
 // iteration is exhausted or an error occurred. Call Err to distinguish between
 // the two.
-func (it *CloseableIterator) Next() bool {
+func (it *Iterator) Next() bool {
 	if it.err != nil || it.closed {
 		return false
 	}
@@ -64,14 +64,14 @@ func (it *CloseableIterator) Next() bool {
 
 // Entry returns the key and value of the current entry. Must only be called
 // after Next returns true.
-func (it *CloseableIterator) Entry() (key, value []byte) {
+func (it *Iterator) Entry() (key, value []byte) {
 	e := it.buf[it.pos]
 	return e.Key, e.Value
 }
 
 // Metadata returns the server-side metadata of the current entry, or nil if
 // the iterator was not created with WithIteratorMetadata.
-func (it *CloseableIterator) Metadata() *IteratorMetadata {
+func (it *Iterator) Metadata() *IteratorMetadata {
 	e := it.buf[it.pos]
 	if e.Metadata == nil {
 		return nil
@@ -86,13 +86,13 @@ func (it *CloseableIterator) Metadata() *IteratorMetadata {
 }
 
 // Err returns the error that caused Next to return false, if any.
-func (it *CloseableIterator) Err() error {
+func (it *Iterator) Err() error {
 	return it.err
 }
 
 // Close releases the server-side iteration cursor. It is safe to call multiple
 // times. If the iteration finished naturally, Close is a no-op.
-func (it *CloseableIterator) Close() error {
+func (it *Iterator) Close() error {
 	if it.closed {
 		return nil
 	}
@@ -107,9 +107,9 @@ func (it *CloseableIterator) Close() error {
 	return err
 }
 
-// Iterator returns a CloseableIterator that fetches all entries from the cache
+// Iterator returns an Iterator that fetches all entries from the cache
 // in batches. The caller must close the iterator when done.
-func (rc *RemoteCache) Iterator(ctx context.Context, opts ...IteratorOption) (*CloseableIterator, error) {
+func (rc *RemoteCache) Iterator(ctx context.Context, opts ...IteratorOption) (*Iterator, error) {
 	cfg := &iteratorConfig{batchSize: 1000}
 	for _, o := range opts {
 		o(cfg)
@@ -124,7 +124,7 @@ func (rc *RemoteCache) Iterator(ctx context.Context, opts ...IteratorOption) (*C
 		return nil, err
 	}
 
-	return &CloseableIterator{
+	return &Iterator{
 		client:      rc.client,
 		cacheName:   rc.name,
 		iterationID: iterationID,
