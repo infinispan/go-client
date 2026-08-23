@@ -349,10 +349,10 @@ func TestProtoStream_LargeProtoMessages(t *testing.T) {
 
 	// Create user with many fields
 	user := &testproto.User{
-		Id:      1,
-		Name:    "ComplexUser",
-		Surname: "WithManyFields",
-		Gender:  testproto.Gender_MALE,
+		Id:         1,
+		Name:       "ComplexUser",
+		Surname:    "WithManyFields",
+		Gender:     testproto.Gender_MALE,
 		AccountIds: []int32{100, 200, 300, 400, 500},
 		Addresses: []*testproto.Address{
 			{Street: "123 Main St", City: "City1", State: "ST", Postcode: "12345", Country: "USA"},

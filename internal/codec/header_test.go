@@ -61,11 +61,11 @@ func TestWriteRequestHeaderWithMediaType(t *testing.T) {
 
 func TestReadResponseHeaderNoTopology(t *testing.T) {
 	var buf bytes.Buffer
-	buf.WriteByte(ResponseMagic)              // magic
-	_ = WriteVLong(&buf, 42)                      // messageId
-	buf.WriteByte(OpGetResponse)              // opcode
-	buf.WriteByte(StatusSuccess)              // status
-	buf.WriteByte(0)                          // no topology change
+	buf.WriteByte(ResponseMagic) // magic
+	_ = WriteVLong(&buf, 42)     // messageId
+	buf.WriteByte(OpGetResponse) // opcode
+	buf.WriteByte(StatusSuccess) // status
+	buf.WriteByte(0)             // no topology change
 
 	h, err := ReadResponseHeader(&buf, IntelligenceTopologyAware)
 	if err != nil {
@@ -94,12 +94,12 @@ func TestReadResponseHeaderWithTopology(t *testing.T) {
 	buf.WriteByte(1) // topology change marker
 
 	// topology update
-	_ = WriteVInt(&buf, 5)                 // topology id
-	_ = WriteVInt(&buf, 2)                 // num servers
-	_ = WriteLPString(&buf, "server1")     // host 1
-	_ = WriteU2(&buf, 11222)               // port 1
-	_ = WriteLPString(&buf, "server2")     // host 2
-	_ = WriteU2(&buf, 11223)               // port 2
+	_ = WriteVInt(&buf, 5)             // topology id
+	_ = WriteVInt(&buf, 2)             // num servers
+	_ = WriteLPString(&buf, "server1") // host 1
+	_ = WriteU2(&buf, 11222)           // port 1
+	_ = WriteLPString(&buf, "server2") // host 2
+	_ = WriteU2(&buf, 11223)           // port 2
 
 	h, err := ReadResponseHeader(&buf, IntelligenceTopologyAware)
 	if err != nil {

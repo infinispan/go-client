@@ -83,8 +83,10 @@ type MultimapGetWithMetadataOp struct {
 	SupportsDuplicates bool
 }
 
-func (o *MultimapGetWithMetadataOp) RequestOpCode() byte   { return codec.OpMultimapGetWithMetadata }
-func (o *MultimapGetWithMetadataOp) ResponseOpCode() byte  { return codec.OpMultimapGetWithMetadataResponse }
+func (o *MultimapGetWithMetadataOp) RequestOpCode() byte { return codec.OpMultimapGetWithMetadata }
+func (o *MultimapGetWithMetadataOp) ResponseOpCode() byte {
+	return codec.OpMultimapGetWithMetadataResponse
+}
 func (o *MultimapGetWithMetadataOp) CacheName() []byte     { return []byte(o.Cache) }
 func (o *MultimapGetWithMetadataOp) Flags() int32          { return 0 }
 func (o *MultimapGetWithMetadataOp) KeyMediaType() int32   { return codec.MediaIDOctetStream }

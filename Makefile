@@ -6,7 +6,7 @@ DOC_ZIP := _site.zip
 DOCS_OUT := _docs
 DOCS_ZIP := docs.zip
 
-.PHONY: help build vet lint test test-integration check doc doc-zip docs-zip clean
+.PHONY: help build vet lint vulncheck test test-integration check doc doc-zip docs-zip clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
@@ -21,13 +21,16 @@ vet: ## Run go vet
 lint: $(GOBIN)/golangci-lint ## Run golangci-lint
 	$(GOBIN)/golangci-lint run ./...
 
+vulncheck: $(GOBIN)/govulncheck ## Run govulncheck for known vulnerabilities
+	$(GOBIN)/govulncheck ./...
+
 test: ## Run unit tests (no server required)
 	go test -short ./...
 
 test-integration: ## Run integration tests (requires Docker; set INFINISPAN_SERVER_IMAGE to override)
 	go test -timeout 120s ./test/...
 
-check: build vet lint test ## Run build, vet, lint, and test
+check: build vet lint vulncheck test ## Run build, vet, lint, vulncheck, and test
 
 doc: $(GOBIN)/doc2go ## Generate HTML API docs to _site/
 	rm -rf $(DOC_OUT)
@@ -50,4 +53,7 @@ $(GOBIN)/doc2go:
 	go install go.abhg.dev/doc2go@latest
 
 $(GOBIN)/golangci-lint:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
+
+$(GOBIN)/govulncheck:
+	go install golang.org/x/vuln/cmd/govulncheck@latest

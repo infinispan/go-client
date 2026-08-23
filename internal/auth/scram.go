@@ -11,16 +11,16 @@ import (
 )
 
 type ScramSHA256 struct {
-	username     string
-	password     string
-	state        scramState
-	clientNonce  string
-	serverNonce  string
-	salt         []byte
-	iterations   int
-	authMessage  string
-	saltedPwd    []byte
-	serverKey    []byte
+	username    string
+	password    string
+	state       scramState
+	clientNonce string
+	serverNonce string
+	salt        []byte
+	iterations  int
+	authMessage string
+	saltedPwd   []byte
+	serverKey   []byte
 }
 
 type scramState int
@@ -35,9 +35,9 @@ func NewScramSHA256(username, password string) *ScramSHA256 {
 	return &ScramSHA256{username: username, password: password}
 }
 
-func (s *ScramSHA256) Name() string            { return "SCRAM-SHA-256" }
+func (s *ScramSHA256) Name() string             { return "SCRAM-SHA-256" }
 func (s *ScramSHA256) HasInitialResponse() bool { return true }
-func (s *ScramSHA256) Complete() bool         { return s.state == scramStateComplete }
+func (s *ScramSHA256) Complete() bool           { return s.state == scramStateComplete }
 func (s *ScramSHA256) Username() string         { return s.username }
 func (s *ScramSHA256) Password() string         { return s.password }
 

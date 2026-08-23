@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"infinispan.org/go-client/hotrod"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/network"
 	"github.com/testcontainers/testcontainers-go/wait"
+	"infinispan.org/go-client/hotrod"
 )
 
 func startClusterNode(t *testing.T, ctx context.Context, nw *testcontainers.DockerNetwork, alias string) testcontainers.Container {

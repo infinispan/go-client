@@ -147,4 +147,3 @@ func TestNonCircularReference_Success(t *testing.T) {
 		t.Errorf("Player[0].Name = %q, want %q", retrieved.Players[0].Name, "player1")
 	}
 }
-

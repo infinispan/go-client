@@ -20,9 +20,9 @@ type GetWithMetadataOp struct {
 }
 
 func (g *GetWithMetadataOp) RequestOpCode() byte  { return codec.OpGetWithMetadata }
-func (g *GetWithMetadataOp) ResponseOpCode() byte  { return codec.OpGetWithMetadataResponse }
-func (g *GetWithMetadataOp) CacheName() []byte     { return []byte(g.Cache) }
-func (g *GetWithMetadataOp) Flags() int32          { return g.OpFlags }
+func (g *GetWithMetadataOp) ResponseOpCode() byte { return codec.OpGetWithMetadataResponse }
+func (g *GetWithMetadataOp) CacheName() []byte    { return []byte(g.Cache) }
+func (g *GetWithMetadataOp) Flags() int32         { return g.OpFlags }
 
 func (g *GetWithMetadataOp) KeyMediaType() int32 {
 	if g.MediaType != 0 {

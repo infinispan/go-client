@@ -18,13 +18,13 @@ type GetWithVersionOp struct {
 	OpFlags int32
 }
 
-func (g *GetWithVersionOp) RequestOpCode() byte  { return codec.OpGetWithVersion }
-func (g *GetWithVersionOp) ResponseOpCode() byte { return codec.OpGetWithVersionResponse }
-func (g *GetWithVersionOp) CacheName() []byte    { return []byte(g.Cache) }
-func (g *GetWithVersionOp) Flags() int32         { return g.OpFlags }
-func (g *GetWithVersionOp) KeyMediaType() int32  { return codec.MediaIDOctetStream }
+func (g *GetWithVersionOp) RequestOpCode() byte   { return codec.OpGetWithVersion }
+func (g *GetWithVersionOp) ResponseOpCode() byte  { return codec.OpGetWithVersionResponse }
+func (g *GetWithVersionOp) CacheName() []byte     { return []byte(g.Cache) }
+func (g *GetWithVersionOp) Flags() int32          { return g.OpFlags }
+func (g *GetWithVersionOp) KeyMediaType() int32   { return codec.MediaIDOctetStream }
 func (g *GetWithVersionOp) ValueMediaType() int32 { return codec.MediaIDOctetStream }
-func (g *GetWithVersionOp) KeyBytes() []byte     { return g.Key }
+func (g *GetWithVersionOp) KeyBytes() []byte      { return g.Key }
 
 func (g *GetWithVersionOp) WriteBody(w io.Writer) error {
 	return codec.WriteLPBytes(w, g.Key)

@@ -17,21 +17,21 @@ const (
 
 // WrappedMessage field numbers (from org.infinispan.protostream.WrappedMessage).
 const (
-	fieldWrappedDouble    = 1
-	fieldWrappedFloat     = 2
-	fieldWrappedInt64     = 3
-	fieldWrappedUInt64    = 4
-	fieldWrappedInt32     = 5
-	fieldWrappedFixed64   = 6
-	fieldWrappedFixed32   = 7
-	fieldWrappedBool      = 8
-	fieldWrappedString    = 9
-	fieldWrappedBytes     = 10
-	fieldWrappedUInt32    = 11
-	fieldWrappedSFixed32  = 12
-	fieldWrappedSFixed64  = 13
-	fieldWrappedSInt32    = 14
-	fieldWrappedSInt64    = 15
+	fieldWrappedDouble   = 1
+	fieldWrappedFloat    = 2
+	fieldWrappedInt64    = 3
+	fieldWrappedUInt64   = 4
+	fieldWrappedInt32    = 5
+	fieldWrappedFixed64  = 6
+	fieldWrappedFixed32  = 7
+	fieldWrappedBool     = 8
+	fieldWrappedString   = 9
+	fieldWrappedBytes    = 10
+	fieldWrappedUInt32   = 11
+	fieldWrappedSFixed32 = 12
+	fieldWrappedSFixed64 = 13
+	fieldWrappedSInt32   = 14
+	fieldWrappedSInt64   = 15
 
 	fieldWrappedDescriptorFullName = 16
 	fieldWrappedMessage            = 17
@@ -350,7 +350,7 @@ func UnwrapValue(data []byte) (any, error) {
 			if n <= 0 {
 				return errors.New("UnwrapValue: invalid sint32 varint")
 			}
-			result = int32(decodeZigZag32(v))
+			result = decodeZigZag32(v)
 		case fieldWrappedSInt64: // 15 - varint (zigzag)
 			v, n := decodeUvarint(value)
 			if n <= 0 {

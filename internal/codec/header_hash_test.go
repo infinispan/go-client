@@ -14,17 +14,17 @@ func TestReadResponseHeaderWithHashTopology(t *testing.T) {
 	buf.WriteByte(1) // topology change marker
 
 	// topology update
-	_ = WriteVInt(&buf, 10)            // topology id
-	_ = WriteVInt(&buf, 3)             // 3 servers
-	_ = WriteLPString(&buf, "node-a")  // host 0
-	_ = WriteU2(&buf, 11222)           // port 0
-	_ = WriteLPString(&buf, "node-b")  // host 1
-	_ = WriteU2(&buf, 11222)           // port 1
-	_ = WriteLPString(&buf, "node-c")  // host 2
-	_ = WriteU2(&buf, 11222)           // port 2
+	_ = WriteVInt(&buf, 10)           // topology id
+	_ = WriteVInt(&buf, 3)            // 3 servers
+	_ = WriteLPString(&buf, "node-a") // host 0
+	_ = WriteU2(&buf, 11222)          // port 0
+	_ = WriteLPString(&buf, "node-b") // host 1
+	_ = WriteU2(&buf, 11222)          // port 1
+	_ = WriteLPString(&buf, "node-c") // host 2
+	_ = WriteU2(&buf, 11222)          // port 2
 
 	// hash distribution data (only read when clientIntelligence == HASH_DIST_AWARE)
-	buf.WriteByte(3)   // hash function version
+	buf.WriteByte(3)       // hash function version
 	_ = WriteVInt(&buf, 4) // 4 segments
 
 	// segment 0: 2 owners (node 0, node 1)
@@ -89,10 +89,10 @@ func TestReadResponseHeaderTopologyAwareSkipsHash(t *testing.T) {
 	buf.WriteByte(StatusSuccess)
 	buf.WriteByte(1) // topology change marker
 
-	_ = WriteVInt(&buf, 5)                 // topology id
-	_ = WriteVInt(&buf, 1)                 // 1 server
-	_ = WriteLPString(&buf, "server1")     // host
-	_ = WriteU2(&buf, 11222)               // port
+	_ = WriteVInt(&buf, 5)             // topology id
+	_ = WriteVInt(&buf, 1)             // 1 server
+	_ = WriteLPString(&buf, "server1") // host
+	_ = WriteU2(&buf, 11222)           // port
 
 	// No hash data follows — topology-aware doesn't read it
 

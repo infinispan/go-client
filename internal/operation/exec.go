@@ -16,11 +16,11 @@ type ExecOp struct {
 	Params   []ExecParam
 }
 
-func (o *ExecOp) RequestOpCode() byte  { return codec.OpExec }
-func (o *ExecOp) ResponseOpCode() byte { return codec.OpExecResponse }
-func (o *ExecOp) CacheName() []byte    { return []byte{} }
-func (o *ExecOp) Flags() int32         { return 0 }
-func (o *ExecOp) KeyMediaType() int32  { return 0 }
+func (o *ExecOp) RequestOpCode() byte   { return codec.OpExec }
+func (o *ExecOp) ResponseOpCode() byte  { return codec.OpExecResponse }
+func (o *ExecOp) CacheName() []byte     { return []byte{} }
+func (o *ExecOp) Flags() int32          { return 0 }
+func (o *ExecOp) KeyMediaType() int32   { return 0 }
 func (o *ExecOp) ValueMediaType() int32 { return 0 }
 
 func (o *ExecOp) WriteBody(w io.Writer) error {

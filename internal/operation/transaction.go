@@ -33,11 +33,11 @@ type PrepareTx2Op struct {
 	Modifications  []TxModification
 }
 
-func (o *PrepareTx2Op) RequestOpCode() byte  { return codec.OpPrepareTx2 }
-func (o *PrepareTx2Op) ResponseOpCode() byte { return codec.OpPrepareTx2Response }
-func (o *PrepareTx2Op) CacheName() []byte    { return []byte(o.Cache) }
-func (o *PrepareTx2Op) Flags() int32         { return 0 }
-func (o *PrepareTx2Op) KeyMediaType() int32  { return codec.MediaIDOctetStream }
+func (o *PrepareTx2Op) RequestOpCode() byte   { return codec.OpPrepareTx2 }
+func (o *PrepareTx2Op) ResponseOpCode() byte  { return codec.OpPrepareTx2Response }
+func (o *PrepareTx2Op) CacheName() []byte     { return []byte(o.Cache) }
+func (o *PrepareTx2Op) Flags() int32          { return 0 }
+func (o *PrepareTx2Op) KeyMediaType() int32   { return codec.MediaIDOctetStream }
 func (o *PrepareTx2Op) ValueMediaType() int32 { return codec.MediaIDOctetStream }
 
 func (o *PrepareTx2Op) WriteBody(w io.Writer) error {

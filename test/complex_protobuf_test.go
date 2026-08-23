@@ -301,9 +301,9 @@ func TestComplexProtobuf_MapFields(t *testing.T) {
 			"level":      "Senior",
 		},
 		Preferences: map[string]int32{
-			"theme":        1,
+			"theme":         1,
 			"notifications": 0,
-			"fontSize":     14,
+			"fontSize":      14,
 		},
 	}
 
@@ -787,11 +787,11 @@ func TestComplexProtobuf_EmptyCollections(t *testing.T) {
 		Name:         "Empty",
 		Surname:      "User",
 		Gender:       testproto.Gender_OTHER,
-		AccountIds:   []int32{},           // Empty slice
+		AccountIds:   []int32{},              // Empty slice
 		Addresses:    []*testproto.Address{}, // Empty slice
-		PhoneNumbers: nil,                 // Nil slice
-		Metadata:     map[string]string{}, // Empty map
-		Preferences:  nil,                 // Nil map
+		PhoneNumbers: nil,                    // Nil slice
+		Metadata:     map[string]string{},    // Empty map
+		Preferences:  nil,                    // Nil map
 	}
 
 	if err := cache.Put(ctx, 30, user); err != nil {

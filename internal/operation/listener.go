@@ -9,7 +9,7 @@ import (
 type EventType byte
 
 const (
-	EventCreated  EventType = iota
+	EventCreated EventType = iota
 	EventModified
 	EventRemoved
 	EventExpired
@@ -59,8 +59,8 @@ type AddClientListenerOp struct {
 	ConverterParams  [][]byte
 }
 
-func (o *AddClientListenerOp) RequestOpCode() byte  { return codec.OpAddClientListener }
-func (o *AddClientListenerOp) ResponseOpCode() byte { return codec.OpAddClientListenerResponse }
+func (o *AddClientListenerOp) RequestOpCode() byte   { return codec.OpAddClientListener }
+func (o *AddClientListenerOp) ResponseOpCode() byte  { return codec.OpAddClientListenerResponse }
 func (o *AddClientListenerOp) CacheName() []byte     { return []byte(o.Cache) }
 func (o *AddClientListenerOp) Flags() int32          { return 0 }
 func (o *AddClientListenerOp) KeyMediaType() int32   { return 0 }
@@ -123,8 +123,8 @@ type RemoveClientListenerOp struct {
 	ListenerID []byte
 }
 
-func (o *RemoveClientListenerOp) RequestOpCode() byte  { return codec.OpRemoveClientListener }
-func (o *RemoveClientListenerOp) ResponseOpCode() byte { return codec.OpRemoveClientListenerResponse }
+func (o *RemoveClientListenerOp) RequestOpCode() byte   { return codec.OpRemoveClientListener }
+func (o *RemoveClientListenerOp) ResponseOpCode() byte  { return codec.OpRemoveClientListenerResponse }
 func (o *RemoveClientListenerOp) CacheName() []byte     { return []byte(o.Cache) }
 func (o *RemoveClientListenerOp) Flags() int32          { return 0 }
 func (o *RemoveClientListenerOp) KeyMediaType() int32   { return 0 }

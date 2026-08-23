@@ -40,12 +40,13 @@ type parsedURI struct {
 func parseURI(rawURI string) (*parsedURI, error) {
 	result := &parsedURI{}
 
-	if strings.HasPrefix(rawURI, "hotrods://") {
+	switch {
+	case strings.HasPrefix(rawURI, "hotrods://"):
 		result.tls = true
 		rawURI = "hotrods" + rawURI[len("hotrods"):]
-	} else if strings.HasPrefix(rawURI, "hotrod://") {
+	case strings.HasPrefix(rawURI, "hotrod://"):
 		rawURI = "hotrod" + rawURI[len("hotrod"):]
-	} else {
+	default:
 		return nil, fmt.Errorf("unsupported scheme, expected hotrod:// or hotrods://")
 	}
 

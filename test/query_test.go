@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"google.golang.org/protobuf/proto"
 	"infinispan.org/go-client/hotrod"
 	"infinispan.org/go-client/internal/testproto"
-	"google.golang.org/protobuf/proto"
 )
 
 func TestQuery_BasicIckle(t *testing.T) {

@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/testcontainers/testcontainers-go"
 	"infinispan.org/go-client/hotrod"
 	"infinispan.org/go-client/internal/protostream"
 	"infinispan.org/go-client/internal/testproto"
-	"github.com/testcontainers/testcontainers-go"
 )
 
 const indexedPersonProtoSchema = `syntax = "proto3"; package test; /** @Indexed */ message Person { /** @Field(store = Store.YES) */ string name = 1; /** @Field(store = Store.YES) */ int32 age = 2; }`

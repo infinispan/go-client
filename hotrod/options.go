@@ -34,7 +34,7 @@ type Option func(*clientConfig)
 type clientConfig struct {
 	tls                   *tls.Config
 	authMechanism         string
-	authUsername           string
+	authUsername          string
 	authPassword          string
 	authToken             string
 	connectTimeout        time.Duration

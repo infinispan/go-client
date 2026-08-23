@@ -8,10 +8,10 @@ import (
 
 type PingOp struct{}
 
-func (p *PingOp) RequestOpCode() byte  { return codec.OpPing }
-func (p *PingOp) ResponseOpCode() byte { return codec.OpPingResponse }
-func (p *PingOp) CacheName() []byte    { return []byte{} }
-func (p *PingOp) Flags() int32         { return 0 }
+func (p *PingOp) RequestOpCode() byte   { return codec.OpPing }
+func (p *PingOp) ResponseOpCode() byte  { return codec.OpPingResponse }
+func (p *PingOp) CacheName() []byte     { return []byte{} }
+func (p *PingOp) Flags() int32          { return 0 }
 func (p *PingOp) KeyMediaType() int32   { return 0 }
 func (p *PingOp) ValueMediaType() int32 { return 0 }
 

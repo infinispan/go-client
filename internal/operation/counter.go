@@ -187,8 +187,10 @@ type CounterGetConfigurationOp struct {
 	Name string
 }
 
-func (o *CounterGetConfigurationOp) RequestOpCode() byte   { return codec.OpCounterGetConfiguration }
-func (o *CounterGetConfigurationOp) ResponseOpCode() byte  { return codec.OpCounterGetConfigurationResponse }
+func (o *CounterGetConfigurationOp) RequestOpCode() byte { return codec.OpCounterGetConfiguration }
+func (o *CounterGetConfigurationOp) ResponseOpCode() byte {
+	return codec.OpCounterGetConfigurationResponse
+}
 func (o *CounterGetConfigurationOp) CacheName() []byte     { return []byte{} }
 func (o *CounterGetConfigurationOp) Flags() int32          { return 0 }
 func (o *CounterGetConfigurationOp) KeyMediaType() int32   { return 0 }

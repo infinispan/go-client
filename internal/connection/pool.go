@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	ErrNoServers      = errors.New("no servers available")
+	ErrNoServers        = errors.New("no servers available")
 	ErrListenerNotFound = errors.New("listener not found")
 )
 
@@ -180,7 +180,7 @@ func (p *Pool) dialAndSetup(ctx context.Context, addr string) (*Conn, error) {
 		_ = tc.SetNoDelay(p.tcpNoDelay)
 	}
 
-	var netConn net.Conn = rawConn
+	netConn := rawConn
 	if p.tlsConfig != nil {
 		tlsConn := tls.Client(rawConn, p.tlsConfig)
 		if err := tlsConn.HandshakeContext(dialCtx); err != nil {

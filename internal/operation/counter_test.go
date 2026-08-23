@@ -172,7 +172,7 @@ func TestCounterGetConfigurationDecodeWeak(t *testing.T) {
 	// flags: weak(0x01) | volatile(0) = 0x01
 	_ = codec.WriteU1(&buf, 0x01)
 	_ = codec.WriteVInt(&buf, 16) // ConcurrencyLevel
-	_ = codec.WriteLong(&buf, 5) // InitialValue
+	_ = codec.WriteLong(&buf, 5)  // InitialValue
 
 	result, err := (&CounterGetConfigurationOp{Name: "c1"}).DecodeResponse(codec.StatusSuccess, bytes.NewReader(buf.Bytes()))
 	if err != nil {
@@ -208,13 +208,13 @@ func TestCounterGetConfigurationDecodeNotDefined(t *testing.T) {
 
 func TestCounterConfigurationRoundTrip(t *testing.T) {
 	original := &CounterConfiguration{
-		Type:         CounterWeak,
-		Bounded:      true,
-		Storage:      StoragePersistent,
+		Type:             CounterWeak,
+		Bounded:          true,
+		Storage:          StoragePersistent,
 		ConcurrencyLevel: 8,
-		LowerBound:   -50,
-		UpperBound:   50,
-		InitialValue: 10,
+		LowerBound:       -50,
+		UpperBound:       50,
+		InitialValue:     10,
 	}
 
 	var buf bytes.Buffer

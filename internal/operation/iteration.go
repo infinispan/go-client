@@ -14,11 +14,11 @@ type IterationStartOp struct {
 }
 
 func (o *IterationStartOp) RequestOpCode() byte   { return codec.OpIterationStart }
-func (o *IterationStartOp) ResponseOpCode() byte   { return codec.OpIterationStartResponse }
-func (o *IterationStartOp) CacheName() []byte      { return []byte(o.Cache) }
-func (o *IterationStartOp) Flags() int32           { return 0 }
-func (o *IterationStartOp) KeyMediaType() int32    { return codec.MediaIDOctetStream }
-func (o *IterationStartOp) ValueMediaType() int32  { return codec.MediaIDOctetStream }
+func (o *IterationStartOp) ResponseOpCode() byte  { return codec.OpIterationStartResponse }
+func (o *IterationStartOp) CacheName() []byte     { return []byte(o.Cache) }
+func (o *IterationStartOp) Flags() int32          { return 0 }
+func (o *IterationStartOp) KeyMediaType() int32   { return codec.MediaIDOctetStream }
+func (o *IterationStartOp) ValueMediaType() int32 { return codec.MediaIDOctetStream }
 
 func (o *IterationStartOp) WriteBody(w io.Writer) error {
 	if err := codec.WriteSignedVInt(w, -1); err != nil {
@@ -63,11 +63,11 @@ type IterationNextOp struct {
 }
 
 func (o *IterationNextOp) RequestOpCode() byte   { return codec.OpIterationNext }
-func (o *IterationNextOp) ResponseOpCode() byte   { return codec.OpIterationNextResponse }
-func (o *IterationNextOp) CacheName() []byte      { return []byte(o.Cache) }
-func (o *IterationNextOp) Flags() int32           { return 0 }
-func (o *IterationNextOp) KeyMediaType() int32    { return codec.MediaIDOctetStream }
-func (o *IterationNextOp) ValueMediaType() int32  { return codec.MediaIDOctetStream }
+func (o *IterationNextOp) ResponseOpCode() byte  { return codec.OpIterationNextResponse }
+func (o *IterationNextOp) CacheName() []byte     { return []byte(o.Cache) }
+func (o *IterationNextOp) Flags() int32          { return 0 }
+func (o *IterationNextOp) KeyMediaType() int32   { return codec.MediaIDOctetStream }
+func (o *IterationNextOp) ValueMediaType() int32 { return codec.MediaIDOctetStream }
 
 func (o *IterationNextOp) WriteBody(w io.Writer) error {
 	return codec.WriteLPBytes(w, []byte(o.IterationID))
@@ -162,11 +162,11 @@ type IterationEndOp struct {
 }
 
 func (o *IterationEndOp) RequestOpCode() byte   { return codec.OpIterationEnd }
-func (o *IterationEndOp) ResponseOpCode() byte   { return codec.OpIterationEndResponse }
-func (o *IterationEndOp) CacheName() []byte      { return []byte(o.Cache) }
-func (o *IterationEndOp) Flags() int32           { return 0 }
-func (o *IterationEndOp) KeyMediaType() int32    { return codec.MediaIDOctetStream }
-func (o *IterationEndOp) ValueMediaType() int32  { return codec.MediaIDOctetStream }
+func (o *IterationEndOp) ResponseOpCode() byte  { return codec.OpIterationEndResponse }
+func (o *IterationEndOp) CacheName() []byte     { return []byte(o.Cache) }
+func (o *IterationEndOp) Flags() int32          { return 0 }
+func (o *IterationEndOp) KeyMediaType() int32   { return codec.MediaIDOctetStream }
+func (o *IterationEndOp) ValueMediaType() int32 { return codec.MediaIDOctetStream }
 
 func (o *IterationEndOp) WriteBody(w io.Writer) error {
 	return codec.WriteLPBytes(w, []byte(o.IterationID))

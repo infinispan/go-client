@@ -210,7 +210,7 @@ func TestSchemaValidation_DuplicateFieldNumbers(t *testing.T) {
 	if hasError {
 		t.Logf("✓ Duplicate field number error detected: %s", errorMsg)
 		if strings.Contains(strings.ToLower(errorMsg), "duplicate") ||
-		   strings.Contains(strings.ToLower(errorMsg), "field") {
+			strings.Contains(strings.ToLower(errorMsg), "field") {
 			t.Log("✓ Error message mentions duplicate/field")
 		}
 	} else {
@@ -249,8 +249,8 @@ func TestSchemaValidation_UndefinedType(t *testing.T) {
 	if hasError {
 		t.Logf("✓ Undefined type error detected: %s", errorMsg)
 		if strings.Contains(errorMsg, "NonExistentType") ||
-		   strings.Contains(strings.ToLower(errorMsg), "undefined") ||
-		   strings.Contains(strings.ToLower(errorMsg), "not found") {
+			strings.Contains(strings.ToLower(errorMsg), "undefined") ||
+			strings.Contains(strings.ToLower(errorMsg), "not found") {
 			t.Log("✓ Error message mentions the undefined type")
 		}
 	} else {

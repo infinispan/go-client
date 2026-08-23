@@ -17,13 +17,13 @@ type ReplaceIfUnmodifiedOp struct {
 	OpFlags  int32
 }
 
-func (o *ReplaceIfUnmodifiedOp) RequestOpCode() byte  { return codec.OpReplaceIfUnmodified }
-func (o *ReplaceIfUnmodifiedOp) ResponseOpCode() byte { return codec.OpReplaceIfUnmodifiedResponse }
-func (o *ReplaceIfUnmodifiedOp) CacheName() []byte    { return []byte(o.Cache) }
-func (o *ReplaceIfUnmodifiedOp) Flags() int32         { return o.OpFlags }
-func (o *ReplaceIfUnmodifiedOp) KeyMediaType() int32  { return codec.MediaIDOctetStream }
+func (o *ReplaceIfUnmodifiedOp) RequestOpCode() byte   { return codec.OpReplaceIfUnmodified }
+func (o *ReplaceIfUnmodifiedOp) ResponseOpCode() byte  { return codec.OpReplaceIfUnmodifiedResponse }
+func (o *ReplaceIfUnmodifiedOp) CacheName() []byte     { return []byte(o.Cache) }
+func (o *ReplaceIfUnmodifiedOp) Flags() int32          { return o.OpFlags }
+func (o *ReplaceIfUnmodifiedOp) KeyMediaType() int32   { return codec.MediaIDOctetStream }
 func (o *ReplaceIfUnmodifiedOp) ValueMediaType() int32 { return codec.MediaIDOctetStream }
-func (o *ReplaceIfUnmodifiedOp) KeyBytes() []byte     { return o.Key }
+func (o *ReplaceIfUnmodifiedOp) KeyBytes() []byte      { return o.Key }
 
 func (o *ReplaceIfUnmodifiedOp) WriteBody(w io.Writer) error {
 	if err := codec.WriteLPBytes(w, o.Key); err != nil {

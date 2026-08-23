@@ -13,13 +13,13 @@ type RemoveIfUnmodifiedOp struct {
 	OpFlags int32
 }
 
-func (o *RemoveIfUnmodifiedOp) RequestOpCode() byte  { return codec.OpRemoveIfUnmodified }
-func (o *RemoveIfUnmodifiedOp) ResponseOpCode() byte { return codec.OpRemoveIfUnmodifiedResponse }
-func (o *RemoveIfUnmodifiedOp) CacheName() []byte    { return []byte(o.Cache) }
-func (o *RemoveIfUnmodifiedOp) Flags() int32         { return o.OpFlags }
-func (o *RemoveIfUnmodifiedOp) KeyMediaType() int32  { return codec.MediaIDOctetStream }
+func (o *RemoveIfUnmodifiedOp) RequestOpCode() byte   { return codec.OpRemoveIfUnmodified }
+func (o *RemoveIfUnmodifiedOp) ResponseOpCode() byte  { return codec.OpRemoveIfUnmodifiedResponse }
+func (o *RemoveIfUnmodifiedOp) CacheName() []byte     { return []byte(o.Cache) }
+func (o *RemoveIfUnmodifiedOp) Flags() int32          { return o.OpFlags }
+func (o *RemoveIfUnmodifiedOp) KeyMediaType() int32   { return codec.MediaIDOctetStream }
 func (o *RemoveIfUnmodifiedOp) ValueMediaType() int32 { return codec.MediaIDOctetStream }
-func (o *RemoveIfUnmodifiedOp) KeyBytes() []byte     { return o.Key }
+func (o *RemoveIfUnmodifiedOp) KeyBytes() []byte      { return o.Key }
 
 func (o *RemoveIfUnmodifiedOp) WriteBody(w io.Writer) error {
 	if err := codec.WriteLPBytes(w, o.Key); err != nil {

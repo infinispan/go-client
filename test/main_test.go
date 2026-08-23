@@ -32,7 +32,6 @@ func TestMain(m *testing.M) {
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
-	defer cancel()
 
 	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: testcontainers.ContainerRequest{
@@ -47,22 +46,26 @@ func TestMain(m *testing.M) {
 		Started: true,
 	})
 	if err != nil {
+		cancel()
 		fmt.Fprintf(os.Stderr, "start infinispan: %v\n", err)
 		os.Exit(1)
 	}
 
 	host, err := container.Host(ctx)
 	if err != nil {
+		cancel()
 		_ = container.Terminate(context.Background())
 		fmt.Fprintf(os.Stderr, "get host: %v\n", err)
 		os.Exit(1)
 	}
 	port, err := container.MappedPort(ctx, "11222")
 	if err != nil {
+		cancel()
 		_ = container.Terminate(context.Background())
 		fmt.Fprintf(os.Stderr, "get port: %v\n", err)
 		os.Exit(1)
 	}
+	cancel()
 
 	sharedContainer = container
 	sharedAddr = fmt.Sprintf("%s:%s", host, port.Port())

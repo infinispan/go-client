@@ -4,8 +4,8 @@ import "infinispan.org/go-client/internal/codec"
 
 // Media type identifiers for cache encoding.
 const (
-	MediaTypeJSON       = codec.MediaIDJSON
-	MediaTypeTextPlain  = codec.MediaIDTextPlain
+	MediaTypeJSON        = codec.MediaIDJSON
+	MediaTypeTextPlain   = codec.MediaIDTextPlain
 	MediaTypeProtostream = codec.MediaIDProtostream
 	MediaTypeOctetStream = codec.MediaIDOctetStream
 )

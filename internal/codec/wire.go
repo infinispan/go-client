@@ -218,11 +218,12 @@ func SkipMediaType(r io.Reader) error {
 	if kind == MediaTypeNone {
 		return nil
 	}
-	if kind == MediaTypePredefined {
+	switch kind {
+	case MediaTypePredefined:
 		if _, err := ReadVInt(r); err != nil {
 			return fmt.Errorf("skip media type predefined id: %w", err)
 		}
-	} else if kind == MediaTypeCustom {
+	case MediaTypeCustom:
 		if _, err := ReadLPString(r); err != nil {
 			return fmt.Errorf("skip media type custom string: %w", err)
 		}

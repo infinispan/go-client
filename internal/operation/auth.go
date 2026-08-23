@@ -16,10 +16,10 @@ type AuthResponse struct {
 	Challenge []byte
 }
 
-func (a *AuthOp) RequestOpCode() byte  { return codec.OpAuth }
-func (a *AuthOp) ResponseOpCode() byte { return codec.OpAuthResponse }
-func (a *AuthOp) CacheName() []byte    { return []byte{} }
-func (a *AuthOp) Flags() int32         { return 0 }
+func (a *AuthOp) RequestOpCode() byte   { return codec.OpAuth }
+func (a *AuthOp) ResponseOpCode() byte  { return codec.OpAuthResponse }
+func (a *AuthOp) CacheName() []byte     { return []byte{} }
+func (a *AuthOp) Flags() int32          { return 0 }
 func (a *AuthOp) KeyMediaType() int32   { return 0 }
 func (a *AuthOp) ValueMediaType() int32 { return 0 }
 

@@ -60,11 +60,12 @@ func NewClient(ctx context.Context, uri string, opts ...Option) (*Client, error)
 		}
 	}
 	if mechName == "" {
-		if username != "" {
+		switch {
+		case username != "":
 			mechName = "SCRAM-SHA-256"
-		} else if token != "" {
+		case token != "":
 			mechName = "OAUTHBEARER"
-		} else if cfg.clientCertPath != "" || parsed.clientCertPath != "" {
+		case cfg.clientCertPath != "" || parsed.clientCertPath != "":
 			mechName = "EXTERNAL"
 		}
 	}

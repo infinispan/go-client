@@ -8,10 +8,10 @@ import (
 
 type AuthMechListOp struct{}
 
-func (a *AuthMechListOp) RequestOpCode() byte  { return codec.OpAuthMechList }
-func (a *AuthMechListOp) ResponseOpCode() byte { return codec.OpAuthMechListResponse }
-func (a *AuthMechListOp) CacheName() []byte    { return []byte{} }
-func (a *AuthMechListOp) Flags() int32         { return 0 }
+func (a *AuthMechListOp) RequestOpCode() byte   { return codec.OpAuthMechList }
+func (a *AuthMechListOp) ResponseOpCode() byte  { return codec.OpAuthMechListResponse }
+func (a *AuthMechListOp) CacheName() []byte     { return []byte{} }
+func (a *AuthMechListOp) Flags() int32          { return 0 }
 func (a *AuthMechListOp) KeyMediaType() int32   { return 0 }
 func (a *AuthMechListOp) ValueMediaType() int32 { return 0 }
 

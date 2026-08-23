@@ -18,9 +18,9 @@ import (
 	"testing"
 	"time"
 
-	"infinispan.org/go-client/hotrod"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
+	"infinispan.org/go-client/hotrod"
 )
 
 func writePEM(t *testing.T, path, blockType string, data []byte) {
