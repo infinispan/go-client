@@ -16,7 +16,7 @@ const txCacheConfig = `<distributed-cache>
 func createTxCache(t *testing.T, client *hotrod.Client, name string) {
 	t.Helper()
 	ctx := context.Background()
-	if err := client.Administration().GetOrCreateCache(ctx, name, txCacheConfig); err != nil {
+	if err := client.Admin().GetOrCreateCache(ctx, name, txCacheConfig); err != nil {
 		t.Fatalf("create tx cache %q: %v", name, err)
 	}
 }

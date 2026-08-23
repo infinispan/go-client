@@ -12,8 +12,8 @@ type CacheAdmin struct {
 	client *Client
 }
 
-// Administration returns a CacheAdmin for managing caches on the server.
-func (c *Client) Administration() *CacheAdmin {
+// Admin returns a CacheAdmin for managing caches on the server.
+func (c *Client) Admin() *CacheAdmin {
 	return &CacheAdmin{client: c}
 }
 
