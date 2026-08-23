@@ -58,51 +58,35 @@ func (c *Client) Counters() *CounterManager {
 // Define creates a counter with the given configuration. Returns true if created,
 // false if a counter with that name already exists.
 func (cm *CounterManager) Define(ctx context.Context, name string, config *CounterConfiguration) (bool, error) {
-	result, err := cm.client.pool.Execute(ctx, &operation.CounterCreateOp{
+	return execute[bool](ctx, cm.client.pool, &operation.CounterCreateOp{
 		Name:   name,
 		Config: config,
 	})
-	if err != nil {
-		return false, err
-	}
-	return result.(bool), nil
 }
 
 // IsDefined reports whether a counter with the given name exists.
 func (cm *CounterManager) IsDefined(ctx context.Context, name string) (bool, error) {
-	result, err := cm.client.pool.Execute(ctx, &operation.CounterIsDefinedOp{
+	return execute[bool](ctx, cm.client.pool, &operation.CounterIsDefinedOp{
 		Name: name,
 	})
-	if err != nil {
-		return false, err
-	}
-	return result.(bool), nil
 }
 
 // GetConfiguration returns the configuration of a named counter, or nil if it does not exist.
 func (cm *CounterManager) GetConfiguration(ctx context.Context, name string) (*CounterConfiguration, error) {
-	result, err := cm.client.pool.Execute(ctx, &operation.CounterGetConfigurationOp{
+	return execute[*CounterConfiguration](ctx, cm.client.pool, &operation.CounterGetConfigurationOp{
 		Name: name,
 	})
-	if err != nil {
-		return nil, err
-	}
-	if result == nil {
-		return nil, nil
-	}
-	return result.(*CounterConfiguration), nil
 }
 
 // Remove resets a counter to its initial value. The counter definition remains.
 func (cm *CounterManager) Remove(ctx context.Context, name string) error {
-	result, err := cm.client.pool.Execute(ctx, &operation.CounterRemoveOp{
+	success, err := execute[bool](ctx, cm.client.pool, &operation.CounterRemoveOp{
 		Name: name,
 	})
 	if err != nil {
 		return err
 	}
-	// Check if reset was successful
-	if success, ok := result.(bool); !ok || !success {
+	if !success {
 		return fmt.Errorf("failed to reset counter %q", name)
 	}
 	return nil
@@ -110,11 +94,7 @@ func (cm *CounterManager) Remove(ctx context.Context, name string) error {
 
 // Names returns the names of all counters defined in the cluster.
 func (cm *CounterManager) Names(ctx context.Context) ([]string, error) {
-	result, err := cm.client.pool.Execute(ctx, &operation.CounterGetNamesOp{})
-	if err != nil {
-		return nil, err
-	}
-	return result.([]string), nil
+	return execute[[]string](ctx, cm.client.pool, &operation.CounterGetNamesOp{})
 }
 
 // Counter returns a Counter handle for operating on the named counter.
@@ -133,53 +113,32 @@ func (c *Counter) Name() string { return c.name }
 
 // Get returns the current value of the counter.
 func (c *Counter) Get(ctx context.Context) (int64, error) {
-	result, err := c.client.pool.Execute(ctx, &operation.CounterGetOp{
+	return execute[int64](ctx, c.client.pool, &operation.CounterGetOp{
 		Name: c.name,
 	})
-	if err != nil {
-		return 0, err
-	}
-	if result == nil {
-		return 0, fmt.Errorf("counter %q not defined", c.name)
-	}
-	return result.(int64), nil
 }
 
 // GetAndSet sets the counter to the given value and returns the previous value.
 func (c *Counter) GetAndSet(ctx context.Context, value int64) (int64, error) {
-	result, err := c.client.pool.Execute(ctx, &operation.CounterGetAndSetOp{
+	return execute[int64](ctx, c.client.pool, &operation.CounterGetAndSetOp{
 		Name:  c.name,
 		Value: value,
 	})
-	if err != nil {
-		return 0, err
-	}
-	if result == nil {
-		return 0, fmt.Errorf("counter %q not defined", c.name)
-	}
-	return result.(int64), nil
 }
 
 // AddAndGet adds a delta to the counter and returns the new value.
 // For weak counters the returned value is always 0.
 func (c *Counter) AddAndGet(ctx context.Context, delta int64) (int64, error) {
-	result, err := c.client.pool.Execute(ctx, &operation.CounterAddAndGetOp{
+	return execute[int64](ctx, c.client.pool, &operation.CounterAddAndGetOp{
 		Name:  c.name,
 		Delta: delta,
 	})
-	if err != nil {
-		return 0, err
-	}
-	if result == nil {
-		return 0, fmt.Errorf("counter %q not defined", c.name)
-	}
-	return result.(int64), nil
 }
 
 // CompareAndSwap atomically sets the counter to update if its current value equals expect.
 // Returns the previous value and whether the swap succeeded.
 func (c *Counter) CompareAndSwap(ctx context.Context, expect, update int64) (int64, bool, error) {
-	result, err := c.client.pool.Execute(ctx, &operation.CounterCasOp{
+	cas, err := execute[*operation.CounterCASResult](ctx, c.client.pool, &operation.CounterCasOp{
 		Name:   c.name,
 		Expect: expect,
 		Update: update,
@@ -187,10 +146,6 @@ func (c *Counter) CompareAndSwap(ctx context.Context, expect, update int64) (int
 	if err != nil {
 		return 0, false, err
 	}
-	if result == nil {
-		return 0, false, fmt.Errorf("counter %q not defined", c.name)
-	}
-	cas := result.(*operation.CounterCASResult)
 	return cas.OldValue, cas.Success, nil
 }
 

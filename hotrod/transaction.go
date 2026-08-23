@@ -46,14 +46,13 @@ func (tc *TxCache) Get(ctx context.Context, key []byte) ([]byte, bool, error) {
 		}
 		return e.value, e.value != nil, nil
 	}
-	result, err := tc.client.pool.Execute(ctx, &operation.GetWithVersionOp{
+	resp, err := execute[*operation.GetWithVersionResponse](ctx, tc.client.pool, &operation.GetWithVersionOp{
 		Cache: tc.cacheName,
 		Key:   key,
 	})
 	if err != nil {
 		return nil, false, err
 	}
-	resp := result.(*operation.GetWithVersionResponse)
 	e := &txEntry{key: dup(key)}
 	if resp.Found {
 		e.value = resp.Value
@@ -145,7 +144,7 @@ func (c *Client) WithTransaction(ctx context.Context, cacheName string, fn func(
 		return nil
 	}
 
-	result, err := c.pool.Execute(ctx, &operation.PrepareTx2Op{
+	xaCode, err := execute[int32](ctx, c.pool, &operation.PrepareTx2Op{
 		Cache:          cacheName,
 		FormatID:       xidFormatID,
 		GlobalTxID:     globalTxID,
@@ -158,8 +157,6 @@ func (c *Client) WithTransaction(ctx context.Context, cacheName string, fn func(
 		_ = rollback(ctx, c, globalTxID, branchQual)
 		return fmt.Errorf("prepare transaction: %w", err)
 	}
-
-	xaCode := result.(int32)
 	if xaCode != codec.XaOk && xaCode != codec.XaRdOnly {
 		_ = rollback(ctx, c, globalTxID, branchQual)
 		return fmt.Errorf("transaction rejected: XA code %d", xaCode)

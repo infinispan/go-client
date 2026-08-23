@@ -191,14 +191,13 @@ type MetadataValue struct {
 
 // GetWithMetadata retrieves the value and metadata (version, lifespan, timestamps) for a key.
 func (rc *RemoteCache) GetWithMetadata(ctx context.Context, key []byte) (*MetadataValue, bool, error) {
-	result, err := rc.client.pool.Execute(ctx, &operation.GetWithMetadataOp{
+	resp, err := execute[*operation.GetWithMetadataResponse](ctx, rc.client.pool, &operation.GetWithMetadataOp{
 		Cache: rc.name,
 		Key:   key,
 	})
 	if err != nil {
 		return nil, false, err
 	}
-	resp := result.(*operation.GetWithMetadataResponse)
 	if !resp.Found {
 		return nil, false, nil
 	}
@@ -220,14 +219,13 @@ type VersionedValue struct {
 
 // Deprecated: Use GetWithMetadata instead, which returns the same version along with full metadata.
 func (rc *RemoteCache) GetWithVersion(ctx context.Context, key []byte) (*VersionedValue, bool, error) {
-	result, err := rc.client.pool.Execute(ctx, &operation.GetWithVersionOp{
+	resp, err := execute[*operation.GetWithVersionResponse](ctx, rc.client.pool, &operation.GetWithVersionOp{
 		Cache: rc.name,
 		Key:   key,
 	})
 	if err != nil {
 		return nil, false, err
 	}
-	resp := result.(*operation.GetWithVersionResponse)
 	if !resp.Found {
 		return nil, false, nil
 	}
@@ -244,7 +242,7 @@ func (rc *RemoteCache) ReplaceIfUnmodified(ctx context.Context, key, value []byt
 	for _, o := range opts {
 		o(cfg)
 	}
-	result, err := rc.client.pool.Execute(ctx, &operation.ReplaceIfUnmodifiedOp{
+	resp, err := execute[*operation.CASResponse](ctx, rc.client.pool, &operation.ReplaceIfUnmodifiedOp{
 		Cache:    rc.name,
 		Key:      key,
 		Value:    value,
@@ -256,13 +254,13 @@ func (rc *RemoteCache) ReplaceIfUnmodified(ctx context.Context, key, value []byt
 	if err != nil {
 		return false, err
 	}
-	return result.(*operation.CASResponse).Success, nil
+	return resp.Success, nil
 }
 
 // RemoveIfUnmodified atomically removes a key only if its version matches.
 // Returns true if the removal succeeded, false if the version has changed.
 func (rc *RemoteCache) RemoveIfUnmodified(ctx context.Context, key []byte, version int64) (bool, error) {
-	result, err := rc.client.pool.Execute(ctx, &operation.RemoveIfUnmodifiedOp{
+	resp, err := execute[*operation.CASResponse](ctx, rc.client.pool, &operation.RemoveIfUnmodifiedOp{
 		Cache:   rc.name,
 		Key:     key,
 		Version: version,
@@ -270,7 +268,7 @@ func (rc *RemoteCache) RemoveIfUnmodified(ctx context.Context, key []byte, versi
 	if err != nil {
 		return false, err
 	}
-	return result.(*operation.CASResponse).Success, nil
+	return resp.Success, nil
 }
 
 // PutRaw stores a key-value pair with an explicit media type identifier.
@@ -298,7 +296,7 @@ func (rc *RemoteCache) GetAndPut(ctx context.Context, key, value []byte, opts ..
 		o(cfg)
 	}
 	cfg.flags |= int32(FlagForceReturnValue)
-	result, err := rc.client.pool.Execute(ctx, &operation.PutOp{
+	resp, err := execute[*operation.PutResponse](ctx, rc.client.pool, &operation.PutOp{
 		Cache:    rc.name,
 		Key:      key,
 		Value:    value,
@@ -309,7 +307,7 @@ func (rc *RemoteCache) GetAndPut(ctx context.Context, key, value []byte, opts ..
 	if err != nil {
 		return nil, err
 	}
-	if resp, ok := result.(*operation.PutResponse); ok && len(resp.PreviousValue) > 0 {
+	if resp != nil && len(resp.PreviousValue) > 0 {
 		return resp.PreviousValue, nil
 	}
 	return nil, nil
@@ -337,7 +335,7 @@ func (rc *RemoteCache) GetAndRemove(ctx context.Context, key []byte, opts ...Rem
 		o(cfg)
 	}
 	cfg.flags |= int32(FlagForceReturnValue)
-	result, err := rc.client.pool.Execute(ctx, &operation.RemoveOp{
+	resp, err := execute[*operation.RemoveResponse](ctx, rc.client.pool, &operation.RemoveOp{
 		Cache:     rc.name,
 		Key:       key,
 		MediaType: cfg.mediaType,
@@ -346,7 +344,6 @@ func (rc *RemoteCache) GetAndRemove(ctx context.Context, key []byte, opts ...Rem
 	if err != nil {
 		return nil, false, err
 	}
-	resp := result.(*operation.RemoveResponse)
 	return resp.PreviousValue, resp.Existed, nil
 }
 
@@ -357,7 +354,7 @@ func (rc *RemoteCache) PutIfAbsent(ctx context.Context, key, value []byte, opts 
 	for _, o := range opts {
 		o(cfg)
 	}
-	result, err := rc.client.pool.Execute(ctx, &operation.PutIfAbsentOp{
+	resp, err := execute[*operation.CASResponse](ctx, rc.client.pool, &operation.PutIfAbsentOp{
 		Cache:    rc.name,
 		Key:      key,
 		Value:    value,
@@ -368,7 +365,7 @@ func (rc *RemoteCache) PutIfAbsent(ctx context.Context, key, value []byte, opts 
 	if err != nil {
 		return false, err
 	}
-	return result.(*operation.CASResponse).Success, nil
+	return resp.Success, nil
 }
 
 // PutIfAbsentWithPrevious stores a key-value pair only if the key does not already exist.
@@ -379,7 +376,7 @@ func (rc *RemoteCache) PutIfAbsentWithPrevious(ctx context.Context, key, value [
 		o(cfg)
 	}
 	cfg.flags |= int32(FlagForceReturnValue)
-	result, err := rc.client.pool.Execute(ctx, &operation.PutIfAbsentOp{
+	resp, err := execute[*operation.CASResponse](ctx, rc.client.pool, &operation.PutIfAbsentOp{
 		Cache:    rc.name,
 		Key:      key,
 		Value:    value,
@@ -390,7 +387,6 @@ func (rc *RemoteCache) PutIfAbsentWithPrevious(ctx context.Context, key, value [
 	if err != nil {
 		return nil, false, err
 	}
-	resp := result.(*operation.CASResponse)
 	return resp.PreviousValue, resp.Success, nil
 }
 
@@ -401,7 +397,7 @@ func (rc *RemoteCache) Replace(ctx context.Context, key, value []byte, opts ...P
 	for _, o := range opts {
 		o(cfg)
 	}
-	result, err := rc.client.pool.Execute(ctx, &operation.ReplaceOp{
+	resp, err := execute[*operation.CASResponse](ctx, rc.client.pool, &operation.ReplaceOp{
 		Cache:    rc.name,
 		Key:      key,
 		Value:    value,
@@ -412,7 +408,7 @@ func (rc *RemoteCache) Replace(ctx context.Context, key, value []byte, opts ...P
 	if err != nil {
 		return false, err
 	}
-	return result.(*operation.CASResponse).Success, nil
+	return resp.Success, nil
 }
 
 // ReplaceWithPrevious replaces an existing entry's value and returns the previous value.
@@ -423,7 +419,7 @@ func (rc *RemoteCache) ReplaceWithPrevious(ctx context.Context, key, value []byt
 		o(cfg)
 	}
 	cfg.flags |= int32(FlagForceReturnValue)
-	result, err := rc.client.pool.Execute(ctx, &operation.ReplaceOp{
+	resp, err := execute[*operation.CASResponse](ctx, rc.client.pool, &operation.ReplaceOp{
 		Cache:    rc.name,
 		Key:      key,
 		Value:    value,
@@ -434,20 +430,15 @@ func (rc *RemoteCache) ReplaceWithPrevious(ctx context.Context, key, value []byt
 	if err != nil {
 		return nil, false, err
 	}
-	resp := result.(*operation.CASResponse)
 	return resp.PreviousValue, resp.Success, nil
 }
 
 // ContainsKey returns true if the cache contains an entry for the given key.
 func (rc *RemoteCache) ContainsKey(ctx context.Context, key []byte) (bool, error) {
-	result, err := rc.client.pool.Execute(ctx, &operation.ContainsKeyOp{
+	return execute[bool](ctx, rc.client.pool, &operation.ContainsKeyOp{
 		Cache: rc.name,
 		Key:   key,
 	})
-	if err != nil {
-		return false, err
-	}
-	return result.(bool), nil
 }
 
 // Clear removes all entries from the cache.
@@ -460,24 +451,16 @@ func (rc *RemoteCache) Clear(ctx context.Context) error {
 
 // Stats returns a map of server-side cache statistics (e.g. "timeSinceStart", "currentNumberOfEntries").
 func (rc *RemoteCache) Stats(ctx context.Context) (map[string]string, error) {
-	result, err := rc.client.pool.Execute(ctx, &operation.StatsOp{
+	return execute[map[string]string](ctx, rc.client.pool, &operation.StatsOp{
 		Cache: rc.name,
 	})
-	if err != nil {
-		return nil, err
-	}
-	return result.(map[string]string), nil
 }
 
 // Size returns the number of entries in the cache.
 func (rc *RemoteCache) Size(ctx context.Context) (int32, error) {
-	result, err := rc.client.pool.Execute(ctx, &operation.SizeOp{
+	return execute[int32](ctx, rc.client.pool, &operation.SizeOp{
 		Cache: rc.name,
 	})
-	if err != nil {
-		return 0, err
-	}
-	return result.(int32), nil
 }
 
 // PutAll stores multiple key-value pairs in a single bulk operation.
@@ -582,17 +565,17 @@ func (rc *RemoteCache) dispatchGetAll(ctx context.Context, groups map[string][][
 	if len(groups) == 1 {
 		for addr, keys := range groups {
 			op := &operation.GetAllOp{Cache: rc.name, Keys: keys}
-			var result any
+			var entries []operation.GetAllEntry
 			var err error
 			if addr != "" {
-				result, err = rc.client.pool.ExecuteOn(ctx, addr, op)
+				entries, err = executeOn[[]operation.GetAllEntry](ctx, rc.client.pool, addr, op)
 			} else {
-				result, err = rc.client.pool.Execute(ctx, op)
+				entries, err = execute[[]operation.GetAllEntry](ctx, rc.client.pool, op)
 			}
 			if err != nil {
 				return nil, err
 			}
-			return entriesToMap(result.([]operation.GetAllEntry)), nil
+			return entriesToMap(entries), nil
 		}
 	}
 
@@ -608,18 +591,18 @@ func (rc *RemoteCache) dispatchGetAll(ctx context.Context, groups map[string][][
 		go func(addr string, keys [][]byte) {
 			defer wg.Done()
 			op := &operation.GetAllOp{Cache: rc.name, Keys: keys}
-			var result any
+			var entries []operation.GetAllEntry
 			var err error
 			if addr != "" {
-				result, err = rc.client.pool.ExecuteOn(ctx, addr, op)
+				entries, err = executeOn[[]operation.GetAllEntry](ctx, rc.client.pool, addr, op)
 			} else {
-				result, err = rc.client.pool.Execute(ctx, op)
+				entries, err = execute[[]operation.GetAllEntry](ctx, rc.client.pool, op)
 			}
 			if err != nil {
 				results <- getResult{err: err}
 				return
 			}
-			results <- getResult{entries: result.([]operation.GetAllEntry)}
+			results <- getResult{entries: entries}
 		}(addr, keys)
 	}
 	wg.Wait()
@@ -651,7 +634,7 @@ func (rc *RemoteCache) GetRaw(ctx context.Context, key []byte, mediaType int32, 
 	for _, o := range opts {
 		o(cfg)
 	}
-	result, err := rc.client.pool.Execute(ctx, &operation.GetOp{
+	resp, err := execute[*operation.GetResponse](ctx, rc.client.pool, &operation.GetOp{
 		Cache:     rc.name,
 		Key:       key,
 		MediaType: mediaType,
@@ -660,7 +643,6 @@ func (rc *RemoteCache) GetRaw(ctx context.Context, key []byte, mediaType int32, 
 	if err != nil {
 		return nil, false, err
 	}
-	resp := result.(*operation.GetResponse)
 	return resp.Value, resp.Found, nil
 }
 
@@ -699,15 +681,13 @@ func (rc *RemoteCache) Query(ctx context.Context, ickle string, opts ...QueryOpt
 	}
 
 	reqBytes := protostream.EncodeQueryRequest(ickle, cfg.startOffset, cfg.maxResults, params)
-	result, err := rc.client.pool.Execute(ctx, &operation.QueryOp{
+	respBytes, err := execute[[]byte](ctx, rc.client.pool, &operation.QueryOp{
 		Cache:   rc.name,
 		Request: reqBytes,
 	})
 	if err != nil {
 		return nil, err
 	}
-
-	respBytes := result.([]byte)
 	resp, err := protostream.DecodeQueryResponse(respBytes)
 	if err != nil {
 		return nil, fmt.Errorf("decode query response: %w", err)
@@ -808,6 +788,10 @@ func wrapQueryParam(value any) ([]byte, error) {
 		return protostream.WrapInt32(int32(v)), nil
 	case int64:
 		return protostream.WrapInt64(v), nil
+	case uint32:
+		return protostream.WrapUInt32(v), nil
+	case uint64:
+		return protostream.WrapUInt64(v), nil
 	case float64:
 		return protostream.WrapDouble(v), nil
 	case float32:
@@ -816,6 +800,8 @@ func wrapQueryParam(value any) ([]byte, error) {
 		return protostream.WrapFloatArray(v), nil
 	case bool:
 		return protostream.WrapBool(v), nil
+	case []byte:
+		return protostream.WrapBytes(v), nil
 	default:
 		return nil, fmt.Errorf("unsupported type %T", value)
 	}

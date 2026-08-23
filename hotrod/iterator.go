@@ -47,7 +47,7 @@ func (it *CloseableIterator) Next() bool {
 	if !it.more {
 		return false
 	}
-	result, err := it.client.pool.ExecuteOn(it.ctx, it.serverAddr, &operation.IterationNextOp{
+	resp, err := executeOn[*operation.IterationNextResponse](it.ctx, it.client.pool, it.serverAddr, &operation.IterationNextOp{
 		Cache:           it.cacheName,
 		IterationID:     it.iterationID,
 		IncludeMetadata: it.metadata,
@@ -56,7 +56,6 @@ func (it *CloseableIterator) Next() bool {
 		it.err = err
 		return false
 	}
-	resp := result.(*operation.IterationNextResponse)
 	it.buf = resp.Entries
 	it.pos = 0
 	it.more = resp.HasMore
@@ -116,7 +115,7 @@ func (rc *RemoteCache) Iterator(ctx context.Context, opts ...IteratorOption) (*C
 		o(cfg)
 	}
 
-	result, addr, err := rc.client.pool.ExecuteWithAddr(ctx, &operation.IterationStartOp{
+	iterationID, addr, err := executeWithAddr[string](ctx, rc.client.pool, &operation.IterationStartOp{
 		Cache:           rc.name,
 		BatchSize:       int32(cfg.batchSize),
 		IncludeMetadata: cfg.includeMetadata,
@@ -124,7 +123,6 @@ func (rc *RemoteCache) Iterator(ctx context.Context, opts ...IteratorOption) (*C
 	if err != nil {
 		return nil, err
 	}
-	iterationID := result.(string)
 
 	return &CloseableIterator{
 		client:      rc.client,

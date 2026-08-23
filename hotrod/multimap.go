@@ -28,15 +28,11 @@ func (c *Client) Multimap(name string, opts ...MultimapOption) *MultimapCache {
 
 // Get retrieves all values associated with a key.
 func (mc *MultimapCache) Get(ctx context.Context, key []byte) ([][]byte, error) {
-	result, err := mc.client.pool.Execute(ctx, &operation.MultimapGetOp{
+	return execute[[][]byte](ctx, mc.client.pool, &operation.MultimapGetOp{
 		Cache:              mc.name,
 		Key:                key,
 		SupportsDuplicates: mc.supportsDuplicates,
 	})
-	if err != nil {
-		return nil, err
-	}
-	return result.([][]byte), nil
 }
 
 // MultimapMetadataCollection holds the values and server-side metadata for a multimap key.
@@ -51,7 +47,7 @@ type MultimapMetadataCollection struct {
 
 // GetWithMetadata retrieves all values and metadata (version, lifespan, timestamps) for a key.
 func (mc *MultimapCache) GetWithMetadata(ctx context.Context, key []byte) (*MultimapMetadataCollection, bool, error) {
-	result, err := mc.client.pool.Execute(ctx, &operation.MultimapGetWithMetadataOp{
+	resp, err := execute[*operation.MultimapGetWithMetadataResponse](ctx, mc.client.pool, &operation.MultimapGetWithMetadataOp{
 		Cache:              mc.name,
 		Key:                key,
 		SupportsDuplicates: mc.supportsDuplicates,
@@ -59,7 +55,6 @@ func (mc *MultimapCache) GetWithMetadata(ctx context.Context, key []byte) (*Mult
 	if err != nil {
 		return nil, false, err
 	}
-	resp := result.(*operation.MultimapGetWithMetadataResponse)
 	if !resp.Found {
 		return nil, false, nil
 	}
@@ -102,81 +97,57 @@ func (mc *MultimapCache) PutWithOptions(ctx context.Context, key []byte, values 
 
 // RemoveKey removes all values associated with a key. Returns true if the key existed.
 func (mc *MultimapCache) RemoveKey(ctx context.Context, key []byte) (bool, error) {
-	result, err := mc.client.pool.Execute(ctx, &operation.MultimapRemoveKeyOp{
+	return execute[bool](ctx, mc.client.pool, &operation.MultimapRemoveKeyOp{
 		Cache:              mc.name,
 		Key:                key,
 		SupportsDuplicates: mc.supportsDuplicates,
 	})
-	if err != nil {
-		return false, err
-	}
-	return result.(bool), nil
 }
 
 // RemoveEntry removes a specific key-value pair. Returns true if the entry existed.
 func (mc *MultimapCache) RemoveEntry(ctx context.Context, key, value []byte) (bool, error) {
-	result, err := mc.client.pool.Execute(ctx, &operation.MultimapRemoveEntryOp{
+	return execute[bool](ctx, mc.client.pool, &operation.MultimapRemoveEntryOp{
 		Cache:              mc.name,
 		Key:                key,
 		Value:              value,
 		SupportsDuplicates: mc.supportsDuplicates,
 	})
-	if err != nil {
-		return false, err
-	}
-	return result.(bool), nil
 }
 
 // ContainsKey reports whether the multimap contains any values for the given key.
 func (mc *MultimapCache) ContainsKey(ctx context.Context, key []byte) (bool, error) {
-	result, err := mc.client.pool.Execute(ctx, &operation.MultimapContainsKeyOp{
+	return execute[bool](ctx, mc.client.pool, &operation.MultimapContainsKeyOp{
 		Cache:              mc.name,
 		Key:                key,
 		SupportsDuplicates: mc.supportsDuplicates,
 	})
-	if err != nil {
-		return false, err
-	}
-	return result.(bool), nil
 }
 
 // ContainsValue reports whether the multimap contains the given value under any key.
 func (mc *MultimapCache) ContainsValue(ctx context.Context, value []byte) (bool, error) {
-	result, err := mc.client.pool.Execute(ctx, &operation.MultimapContainsValueOp{
+	return execute[bool](ctx, mc.client.pool, &operation.MultimapContainsValueOp{
 		Cache:              mc.name,
 		Value:              value,
 		SupportsDuplicates: mc.supportsDuplicates,
 	})
-	if err != nil {
-		return false, err
-	}
-	return result.(bool), nil
 }
 
 // ContainsEntry reports whether the multimap contains the specific key-value pair.
 func (mc *MultimapCache) ContainsEntry(ctx context.Context, key, value []byte) (bool, error) {
-	result, err := mc.client.pool.Execute(ctx, &operation.MultimapContainsEntryOp{
+	return execute[bool](ctx, mc.client.pool, &operation.MultimapContainsEntryOp{
 		Cache:              mc.name,
 		Key:                key,
 		Value:              value,
 		SupportsDuplicates: mc.supportsDuplicates,
 	})
-	if err != nil {
-		return false, err
-	}
-	return result.(bool), nil
 }
 
 // Size returns the total number of key-value pairs in the multimap.
 func (mc *MultimapCache) Size(ctx context.Context) (int64, error) {
-	result, err := mc.client.pool.Execute(ctx, &operation.MultimapSizeOp{
+	return execute[int64](ctx, mc.client.pool, &operation.MultimapSizeOp{
 		Cache:              mc.name,
 		SupportsDuplicates: mc.supportsDuplicates,
 	})
-	if err != nil {
-		return 0, err
-	}
-	return result.(int64), nil
 }
 
 // Name returns the cache name.
