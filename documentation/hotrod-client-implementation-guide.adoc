@@ -10,7 +10,7 @@ It is intended as a reference for anyone porting the client to another language.
 === Wire Format
 
 Hot Rod 4.1 is a request/response binary protocol over TCP.
-All multi-byte integers use variable-length encoding (VInt/VLong) unless otherwise noted.
+All multibyte integers use variable-length encoding (VInt/VLong) unless otherwise noted.
 
 .Magic bytes
 [cols="1,1"]
@@ -279,7 +279,7 @@ The server decides whether to include a topology update by comparing the client'
 The server only sends topology updates for requests that target a **cache** (non-empty cache name).
 Ping and Auth operations use an empty cache name, so they typically do **not** trigger topology updates (unless the server has a default cache configured).
 
-This means the client will only learn about topology changes when it sends a cache operation (Put, Get, etc.).
+This means the client will only learn about topology changes when it sends a cache operation (Put, Get, etc.)
 
 [[topology-id-pitfall]]
 === Topology ID: Not a Monotonic Counter (Critical Pitfall)

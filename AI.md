@@ -4,7 +4,7 @@ The Infinispan Go client implements the Hot Rod 4.1 binary protocol for communic
 
 ## Shared guidelines
 - Use the project's established patterns and terminology. When in doubt, follow the conventions of the package you are working in.
-- Prefer clarity over cleverness. This is an open-source project with multiple contributors.
+- Prefer clarity to cleverness. This is an open-source project with multiple contributors.
 - Be aware of protocol compatibility — the client must work with Infinispan servers across minor version differences.
 
 ## Coding instructions

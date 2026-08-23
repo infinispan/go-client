@@ -82,14 +82,14 @@ hotrods://username:password@host:port   (TLS)
 
 Query parameters for TLS configuration:
 
-| Parameter | Description |
-|-----------|-------------|
-| `trust_store_file_name` | Path to CA certificate PEM file |
-| `sni_host_name` | SNI hostname for TLS |
-| `trust_ca` | Alias for `trust_store_file_name` |
-| `client_cert` | Path to client certificate PEM (mTLS) |
-| `client_key` | Path to client private key PEM (mTLS) |
-| `sni_host` | Alias for `sni_host_name` |
+| Parameter               | Description                           |
+|-------------------------|---------------------------------------|
+| `trust_store_file_name` | Path to CA certificate PEM file       |
+| `sni_host_name`         | SNI hostname for TLS                  |
+| `trust_ca`              | Alias for `trust_store_file_name`     |
+| `client_cert`           | Path to client certificate PEM (mTLS) |
+| `client_key`            | Path to client private key PEM (mTLS) |
+| `sni_host`              | Alias for `sni_host_name`             |
 
 ## Options
 

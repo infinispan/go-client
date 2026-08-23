@@ -4,10 +4,10 @@
 
 Tests are organized into two categories:
 
-| Category         | Location                     | Guard                     | Command                              |
-|------------------|------------------------------|---------------------------|--------------------------------------|
-| Unit tests       | `*_test.go` in each package  | `testing.Short()` (none)  | `go test -short ./...`               |
-| Integration tests| `test/*_test.go`             | `testing.Short()` skip    | `go test -timeout 120s ./test/...`   |
+| Category          | Location                    | Guard                    | Command                            |
+|-------------------|-----------------------------|--------------------------|------------------------------------|
+| Unit tests        | `*_test.go` in each package | `testing.Short()` (none) | `go test -short ./...`             |
+| Integration tests | `test/*_test.go`            | `testing.Short()` skip   | `go test -timeout 120s ./test/...` |
 
 ## Writing Unit Tests
 
