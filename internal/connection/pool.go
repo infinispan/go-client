@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
@@ -14,6 +15,11 @@ import (
 	"infinispan.org/go-client/internal/codec"
 	"infinispan.org/go-client/internal/hash"
 	"infinispan.org/go-client/internal/operation"
+)
+
+var (
+	ErrNoServers      = errors.New("no servers available")
+	ErrListenerNotFound = errors.New("listener not found")
 )
 
 type PoolConfig struct {
@@ -102,7 +108,7 @@ func (p *Pool) Execute(ctx context.Context, op operation.Operation) (any, error)
 	}
 	addr := p.routeOperation(op)
 	if addr == "" {
-		return nil, fmt.Errorf("no servers available")
+		return nil, ErrNoServers
 	}
 	if err := p.ensureConn(ctx, addr); err != nil {
 		return nil, err
@@ -222,7 +228,7 @@ func (p *Pool) newAuthMechanism() auth.Mechanism {
 func (p *Pool) AddListener(ctx context.Context, op *operation.AddClientListenerOp, ch chan<- *operation.CacheEntryEvent) error {
 	addr := p.balancer.Next()
 	if addr == "" {
-		return fmt.Errorf("no servers available")
+		return ErrNoServers
 	}
 	if err := p.ensureConn(ctx, addr); err != nil {
 		return err
@@ -249,7 +255,7 @@ func (p *Pool) AddListener(ctx context.Context, op *operation.AddClientListenerO
 func (p *Pool) AddCustomListener(ctx context.Context, op *operation.AddClientListenerOp, ch chan<- []byte) error {
 	addr := p.balancer.Next()
 	if addr == "" {
-		return fmt.Errorf("no servers available")
+		return ErrNoServers
 	}
 	if err := p.ensureConn(ctx, addr); err != nil {
 		return err
@@ -276,7 +282,7 @@ func (p *Pool) AddCustomListener(ctx context.Context, op *operation.AddClientLis
 func (p *Pool) AddCounterListener(ctx context.Context, op *operation.CounterAddListenerOp, ch chan<- *operation.CounterEvent) error {
 	addr := p.balancer.Next()
 	if addr == "" {
-		return fmt.Errorf("no servers available")
+		return ErrNoServers
 	}
 	if err := p.ensureConn(ctx, addr); err != nil {
 		return err
@@ -309,7 +315,7 @@ func (p *Pool) RemoveCounterListener(ctx context.Context, op *operation.CounterR
 	}
 	p.listenersMu.Unlock()
 	if !ok {
-		return fmt.Errorf("listener not found")
+		return ErrListenerNotFound
 	}
 
 	p.mu.RLock()
@@ -327,7 +333,7 @@ func (p *Pool) RemoveCounterListener(ctx context.Context, op *operation.CounterR
 func (p *Pool) AddBloomListener(ctx context.Context, op *operation.AddBloomNearCacheListenerOp, ch chan<- *operation.CacheEntryEvent) error {
 	addr := p.balancer.Next()
 	if addr == "" {
-		return fmt.Errorf("no servers available")
+		return ErrNoServers
 	}
 	if err := p.ensureConn(ctx, addr); err != nil {
 		return err
@@ -357,7 +363,7 @@ func (p *Pool) ExecuteOnListener(ctx context.Context, listenerID []byte, op oper
 	state, ok := p.listenerStates[key]
 	p.listenersMu.Unlock()
 	if !ok {
-		return nil, fmt.Errorf("listener not found")
+		return nil, ErrListenerNotFound
 	}
 
 	p.mu.RLock()
@@ -378,7 +384,7 @@ func (p *Pool) RemoveListener(ctx context.Context, op *operation.RemoveClientLis
 	}
 	p.listenersMu.Unlock()
 	if !ok {
-		return fmt.Errorf("listener not found")
+		return ErrListenerNotFound
 	}
 
 	p.mu.RLock()
@@ -403,7 +409,7 @@ func (p *Pool) ExecuteWithAddr(ctx context.Context, op operation.Operation) (any
 	}
 	addr := p.routeOperation(op)
 	if addr == "" {
-		return nil, "", fmt.Errorf("no servers available")
+		return nil, "", ErrNoServers
 	}
 	if err := p.ensureConn(ctx, addr); err != nil {
 		return nil, "", err

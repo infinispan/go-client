@@ -16,6 +16,8 @@ import (
 	"infinispan.org/go-client/internal/operation"
 )
 
+var ErrConnClosed = errors.New("connection closed")
+
 type pendingEntry struct {
 	op        operation.Operation
 	ch        chan *response
@@ -81,7 +83,7 @@ func (c *Conn) Addr() string { return c.addr }
 
 func (c *Conn) Execute(ctx context.Context, op operation.Operation) (any, error) {
 	if c.closed.Load() || c.draining.Load() {
-		return nil, errors.New("connection closed")
+		return nil, ErrConnClosed
 	}
 
 	msgID := c.nextMsgID.Add(1)
@@ -100,7 +102,7 @@ func (c *Conn) Execute(ctx context.Context, op operation.Operation) (any, error)
 		c.pending.Delete(msgID)
 		return nil, ctx.Err()
 	case <-c.done:
-		return nil, errors.New("connection closed")
+		return nil, ErrConnClosed
 	}
 }
 
@@ -302,7 +304,7 @@ func (c *Conn) handleCounterEvent() {
 
 func (c *Conn) ExecuteListener(ctx context.Context, op operation.Operation, listenerID []byte, entry *ListenerEntry) error {
 	if c.closed.Load() || c.draining.Load() {
-		return errors.New("connection closed")
+		return ErrConnClosed
 	}
 
 	key := hex.EncodeToString(listenerID)
@@ -331,7 +333,7 @@ func (c *Conn) ExecuteListener(ctx context.Context, op operation.Operation, list
 		return ctx.Err()
 	case <-c.done:
 		c.listeners.Delete(key)
-		return errors.New("connection closed")
+		return ErrConnClosed
 	}
 }
 
