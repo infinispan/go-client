@@ -17,7 +17,8 @@ import (
 
 // Client is a Hot Rod client connected to an Infinispan cluster.
 type Client struct {
-	pool *connection.Pool
+	pool   *connection.Pool
+	logger *slog.Logger
 }
 
 // NewClient creates a new Hot Rod client from a URI (e.g. "hotrod://user:pass@host:port") and optional configuration.
@@ -122,7 +123,7 @@ func NewClient(ctx context.Context, uri string, opts ...Option) (*Client, error)
 		return nil, err
 	}
 
-	return &Client{pool: pool}, nil
+	return &Client{pool: pool, logger: cfg.logger}, nil
 }
 
 // Cache returns a RemoteCache handle for the named cache.

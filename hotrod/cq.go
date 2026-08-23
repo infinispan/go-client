@@ -3,6 +3,7 @@ package hotrod
 import (
 	"context"
 	"crypto/rand"
+	"log/slog"
 
 	"infinispan.org/go-client/internal/operation"
 	"infinispan.org/go-client/internal/protostream"
@@ -13,10 +14,10 @@ const cqFactoryName = "continuous-query-filter-converter-factory"
 // CQResultType identifies whether a continuous query event is a join, update, or leave.
 type CQResultType = protostream.CQResultType
 
-var (
-	CQJoining = protostream.CQJoining
-	CQUpdated = protostream.CQUpdated
-	CQLeaving = protostream.CQLeaving
+const (
+	CQJoining CQResultType = protostream.CQJoining
+	CQUpdated CQResultType = protostream.CQUpdated
+	CQLeaving CQResultType = protostream.CQLeaving
 )
 
 // CQEvent represents a single continuous query result event.
@@ -34,6 +35,7 @@ type ContinuousQuery struct {
 	rawCh  chan []byte
 	evCh   chan *CQEvent
 	done   chan struct{}
+	logger *slog.Logger
 }
 
 // CQOption configures a ContinuousQuery operation.
@@ -102,6 +104,7 @@ func (rc *RemoteCache) ContinuousQuery(ctx context.Context, query string, opts .
 		rawCh:  rawCh,
 		evCh:   evCh,
 		done:   done,
+		logger: rc.client.logger,
 	}
 
 	go cq.decodeLoop()
@@ -130,10 +133,12 @@ func (cq *ContinuousQuery) decodeLoop() {
 			}
 			inner, err := protostream.UnwrapBytes(data)
 			if err != nil {
+				cq.logger.Warn("unwrap CQ event", "err", err)
 				continue
 			}
 			result, err := protostream.DecodeCQResult(inner)
 			if err != nil {
+				cq.logger.Warn("decode CQ result", "err", err)
 				continue
 			}
 			ev := &CQEvent{

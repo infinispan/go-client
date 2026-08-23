@@ -3,6 +3,7 @@ package hotrod
 import (
 	"context"
 	"crypto/rand"
+	"log/slog"
 	"sync/atomic"
 
 	"infinispan.org/go-client/internal/hash"
@@ -34,6 +35,7 @@ type NearCache struct {
 	updateThreshold int32
 	done            chan struct{}
 	events          chan *CacheEntryEvent
+	logger          *slog.Logger
 }
 
 // NewNearCache creates a near cache for the named remote cache with bloom-filter-based invalidation.
@@ -53,6 +55,7 @@ func NewNearCache(ctx context.Context, client *Client, cacheName string, opts ..
 		updateThreshold: updateThreshold,
 		done:            make(chan struct{}),
 		events:          make(chan *CacheEntryEvent, 64),
+		logger:          client.logger,
 	}
 
 	nc.store = newLRU(cfg.maxEntries, nc.onEntryRemoved)
@@ -173,5 +176,7 @@ func (nc *NearCache) updateBloomFilter() {
 		Cache:     nc.remote.name,
 		BloomBits: bits,
 	}
-	_, _ = nc.remote.client.pool.ExecuteOnListener(ctx, nc.listenerID, op)
+	if _, err := nc.remote.client.pool.ExecuteOnListener(ctx, nc.listenerID, op); err != nil {
+		nc.logger.Warn("update bloom filter", "err", err)
+	}
 }

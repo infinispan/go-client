@@ -3,6 +3,7 @@ package hotrod
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"google.golang.org/protobuf/proto"
 )
@@ -13,6 +14,7 @@ type TypedCache[K any, V any] struct {
 	raw        *RemoteCache
 	marshaller Marshaller
 	newV       func() V
+	logger     *slog.Logger
 }
 
 // NewTypedCache creates a typed cache with the given marshaller.
@@ -23,6 +25,7 @@ func NewTypedCache[K any, V any](client *Client, cacheName string, m Marshaller,
 		raw:        client.Cache(cacheName),
 		marshaller: m,
 		newV:       newV,
+		logger:     client.logger,
 	}
 }
 
@@ -111,6 +114,7 @@ type TypedContinuousQuery[K any, V any] struct {
 	inner  *ContinuousQuery
 	evCh   chan *TypedCQEvent[K, V]
 	done   chan struct{}
+	logger *slog.Logger
 }
 
 // ContinuousQuery registers a typed continuous query.
@@ -126,6 +130,7 @@ func (tc *TypedCache[K, V]) ContinuousQuery(ctx context.Context, query string, o
 		inner:  inner,
 		evCh:   evCh,
 		done:   done,
+		logger: tc.logger,
 	}
 	go tcq.decodeLoop(tc.marshaller, tc.newV)
 	return tcq, nil
@@ -148,13 +153,17 @@ func (tcq *TypedContinuousQuery[K, V]) decodeLoop(m Marshaller, newV func() V) {
 			ev := &TypedCQEvent[K, V]{Type: raw.Type}
 			if raw.Key != nil {
 				var k K
-				if err := m.UnmarshalKey(raw.Key, &k); err == nil {
+				if err := m.UnmarshalKey(raw.Key, &k); err != nil {
+					tcq.logger.Warn("unmarshal typed CQ key", "err", err)
+				} else {
 					ev.Key = k
 				}
 			}
 			if raw.Value != nil {
 				v := newV()
-				if err := m.UnmarshalValue(raw.Value, v); err == nil {
+				if err := m.UnmarshalValue(raw.Value, v); err != nil {
+					tcq.logger.Warn("unmarshal typed CQ value", "err", err)
+				} else {
 					ev.Value = v
 				}
 			}
