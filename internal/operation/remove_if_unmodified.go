@@ -35,7 +35,7 @@ func (o *RemoveIfUnmodifiedOp) DecodeResponse(status byte, r io.Reader) (any, er
 			return nil, err
 		}
 		return &CASResponse{
-			Success:       status == codec.StatusSuccess || status == codec.StatusSuccessWithPrevious,
+			Success:       status == codec.StatusSuccessWithPrevious,
 			PreviousValue: prev,
 		}, nil
 	}

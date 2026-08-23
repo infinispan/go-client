@@ -56,7 +56,7 @@ func (o *PutIfAbsentOp) DecodeResponse(status byte, r io.Reader) (any, error) {
 			return nil, err
 		}
 		return &CASResponse{
-			Success:       status == codec.StatusSuccess || status == codec.StatusSuccessWithPrevious,
+			Success:       status == codec.StatusSuccessWithPrevious,
 			PreviousValue: prev,
 		}, nil
 	}
