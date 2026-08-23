@@ -10,11 +10,11 @@ import (
 // EventType identifies the kind of cache entry event.
 type EventType = operation.EventType
 
-var (
-	EventCreated  = operation.EventCreated
-	EventModified = operation.EventModified
-	EventRemoved  = operation.EventRemoved
-	EventExpired  = operation.EventExpired
+const (
+	EventCreated  EventType = operation.EventCreated
+	EventModified EventType = operation.EventModified
+	EventRemoved  EventType = operation.EventRemoved
+	EventExpired  EventType = operation.EventExpired
 )
 
 // CacheEntryEvent represents a server-side cache entry event (created, modified, removed, or expired).

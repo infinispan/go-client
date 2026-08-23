@@ -21,7 +21,7 @@ type CounterState = operation.CounterState
 // including its type, storage mode, bounds, and initial value.
 type CounterConfiguration = operation.CounterConfiguration
 
-var (
+const (
 	// CounterStrong identifies a strong counter that supports all operations
 	// including compare-and-swap.
 	CounterStrong CounterType = operation.CounterStrong
