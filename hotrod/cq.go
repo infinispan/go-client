@@ -15,9 +15,9 @@ const cqFactoryName = "continuous-query-filter-converter-factory"
 type CQResultType = protostream.CQResultType
 
 const (
-	CQJoining CQResultType = protostream.CQJoining
-	CQUpdated CQResultType = protostream.CQUpdated
-	CQLeaving CQResultType = protostream.CQLeaving
+	CQJoining = protostream.CQJoining
+	CQUpdated = protostream.CQUpdated
+	CQLeaving = protostream.CQLeaving
 )
 
 // CQEvent represents a single continuous query result event.

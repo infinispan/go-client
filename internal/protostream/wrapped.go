@@ -35,7 +35,6 @@ const (
 
 	fieldWrappedDescriptorFullName = 16
 	fieldWrappedMessage            = 17
-	fieldWrappedEnum               = 18
 	fieldWrappedDescriptorTypeID   = 19
 
 	fieldWrappedContainerSize     = 27

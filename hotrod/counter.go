@@ -24,22 +24,22 @@ type CounterConfiguration = operation.CounterConfiguration
 const (
 	// CounterStrong identifies a strong counter that supports all operations
 	// including compare-and-swap.
-	CounterStrong CounterType = operation.CounterStrong
+	CounterStrong = operation.CounterStrong
 	// CounterWeak identifies a weak counter optimized for high write throughput.
 	// Weak counters do not support compare-and-swap or get-and-set.
-	CounterWeak CounterType = operation.CounterWeak
+	CounterWeak = operation.CounterWeak
 
 	// StorageVolatile means the counter value is lost on server restart.
-	StorageVolatile CounterStorage = operation.StorageVolatile
+	StorageVolatile = operation.StorageVolatile
 	// StoragePersistent means the counter value survives server restarts.
-	StoragePersistent CounterStorage = operation.StoragePersistent
+	StoragePersistent = operation.StoragePersistent
 
 	// CounterStateValid indicates the counter value is within its bounds.
-	CounterStateValid CounterState = operation.CounterStateValid
+	CounterStateValid = operation.CounterStateValid
 	// CounterStateLowerBound indicates the counter has reached its lower bound.
-	CounterStateLowerBound CounterState = operation.CounterStateLowerBound
+	CounterStateLowerBound = operation.CounterStateLowerBound
 	// CounterStateUpperBound indicates the counter has reached its upper bound.
-	CounterStateUpperBound CounterState = operation.CounterStateUpperBound
+	CounterStateUpperBound = operation.CounterStateUpperBound
 )
 
 // CounterEvent represents a counter value change event from the server.
