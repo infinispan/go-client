@@ -112,7 +112,7 @@ func TestComplexProtobuf_NestedMessages(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[int32, *testproto.User](
 		client, "complex-nested",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.User { return &testproto.User{} },
 	)
 
@@ -209,7 +209,7 @@ func TestComplexProtobuf_RepeatedFields(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[int32, *testproto.User](
 		client, "complex-repeated",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.User { return &testproto.User{} },
 	)
 
@@ -286,7 +286,7 @@ func TestComplexProtobuf_MapFields(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[int32, *testproto.User](
 		client, "complex-maps",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.User { return &testproto.User{} },
 	)
 
@@ -368,7 +368,7 @@ func TestComplexProtobuf_EnumFields(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[int32, *testproto.User](
 		client, "complex-enums",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.User { return &testproto.User{} },
 	)
 
@@ -426,7 +426,7 @@ func TestComplexProtobuf_OptionalFields(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[int32, *testproto.User](
 		client, "complex-optional",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.User { return &testproto.User{} },
 	)
 
@@ -535,7 +535,7 @@ func TestComplexProtobuf_DeeplyNested(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[string, *testproto.Company](
 		client, "complex-deep",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.Company { return &testproto.Company{} },
 	)
 
@@ -656,7 +656,7 @@ func TestComplexProtobuf_OneofFields(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[string, *testproto.Contact](
 		client, "complex-oneof",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.Contact { return &testproto.Contact{} },
 	)
 
@@ -777,7 +777,7 @@ func TestComplexProtobuf_EmptyCollections(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[int32, *testproto.User](
 		client, "complex-empty",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.User { return &testproto.User{} },
 	)
 

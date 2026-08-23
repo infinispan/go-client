@@ -52,7 +52,7 @@ func TestLargeMessage_FindDefaultLimit(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[int32, *testproto.Essay](
 		client, "essay-limit-test",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.Essay { return &testproto.Essay{} },
 	)
 

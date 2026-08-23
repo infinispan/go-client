@@ -31,7 +31,7 @@ func TestQuery_BasicIckle(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[string, *testproto.Person](
 		client, "q-basic",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.Person { return &testproto.Person{} },
 	)
 
@@ -98,7 +98,7 @@ func TestQuery_WithParams(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[string, *testproto.Person](
 		client, "q-params",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.Person { return &testproto.Person{} },
 	)
 
@@ -145,7 +145,7 @@ func TestQuery_Pagination(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[string, *testproto.Person](
 		client, "q-page",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.Person { return &testproto.Person{} },
 	)
 

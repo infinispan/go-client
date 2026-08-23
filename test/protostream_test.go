@@ -42,7 +42,7 @@ func TestProtoStreamPutGet(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[string, *testproto.Person](
 		client, "proto-test",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.Person { return &testproto.Person{} },
 	)
 
@@ -84,7 +84,7 @@ func TestProtoStreamKeyNotFound(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[string, *testproto.Person](
 		client, "proto-miss",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.Person { return &testproto.Person{} },
 	)
 
@@ -120,7 +120,7 @@ func TestProtoStreamWithLifespan(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[string, *testproto.Person](
 		client, "proto-ttl",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.Person { return &testproto.Person{} },
 	)
 

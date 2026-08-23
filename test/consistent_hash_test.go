@@ -79,7 +79,7 @@ func TestConsistentHashWithTypedCache(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[string, *testproto.Person](
 		client, "hash-typed",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.Person { return &testproto.Person{} },
 	)
 

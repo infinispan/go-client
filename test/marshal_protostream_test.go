@@ -10,14 +10,14 @@ import (
 )
 
 func TestProtoStreamMarshallerMediaType(t *testing.T) {
-	m := hotrod.ProtoStreamMarshaller()
+	m := &hotrod.ProtoStreamMarshaller{}
 	if m.MediaType() != codec.MediaIDProtostream {
 		t.Errorf("MediaType() = %d, want %d", m.MediaType(), codec.MediaIDProtostream)
 	}
 }
 
 func TestProtoStreamMarshalStringKey(t *testing.T) {
-	m := hotrod.ProtoStreamMarshaller()
+	m := &hotrod.ProtoStreamMarshaller{}
 	data, err := m.MarshalKey("hello")
 	if err != nil {
 		t.Fatalf("MarshalKey(string): %v", err)
@@ -35,7 +35,7 @@ func TestProtoStreamMarshalStringKey(t *testing.T) {
 }
 
 func TestProtoStreamMarshalInt32Key(t *testing.T) {
-	m := hotrod.ProtoStreamMarshaller()
+	m := &hotrod.ProtoStreamMarshaller{}
 	data, err := m.MarshalKey(int32(42))
 	if err != nil {
 		t.Fatalf("MarshalKey(int32): %v", err)
@@ -46,7 +46,7 @@ func TestProtoStreamMarshalInt32Key(t *testing.T) {
 }
 
 func TestProtoStreamMarshalInt64Key(t *testing.T) {
-	m := hotrod.ProtoStreamMarshaller()
+	m := &hotrod.ProtoStreamMarshaller{}
 	data, err := m.MarshalKey(int64(1000000))
 	if err != nil {
 		t.Fatalf("MarshalKey(int64): %v", err)
@@ -57,7 +57,7 @@ func TestProtoStreamMarshalInt64Key(t *testing.T) {
 }
 
 func TestProtoStreamMarshalUnsupportedKey(t *testing.T) {
-	m := hotrod.ProtoStreamMarshaller()
+	m := &hotrod.ProtoStreamMarshaller{}
 	_, err := m.MarshalKey(3.14)
 	if err == nil {
 		t.Fatal("expected error for unsupported key type")
@@ -65,7 +65,7 @@ func TestProtoStreamMarshalUnsupportedKey(t *testing.T) {
 }
 
 func TestProtoStreamMarshalValue(t *testing.T) {
-	m := hotrod.ProtoStreamMarshaller()
+	m := &hotrod.ProtoStreamMarshaller{}
 	person := &testproto.Person{Name: "John", Age: 30}
 
 	data, err := m.MarshalValue(person)
@@ -89,7 +89,7 @@ func TestProtoStreamMarshalValue(t *testing.T) {
 }
 
 func TestProtoStreamMarshalValueNotProto(t *testing.T) {
-	m := hotrod.ProtoStreamMarshaller()
+	m := &hotrod.ProtoStreamMarshaller{}
 	_, err := m.MarshalValue("not a proto message")
 	if err == nil {
 		t.Fatal("expected error for non-proto value")
@@ -97,7 +97,7 @@ func TestProtoStreamMarshalValueNotProto(t *testing.T) {
 }
 
 func TestProtoStreamMarshalProtoKey(t *testing.T) {
-	m := hotrod.ProtoStreamMarshaller()
+	m := &hotrod.ProtoStreamMarshaller{}
 	person := &testproto.Person{Name: "key-person", Age: 1}
 
 	data, err := m.MarshalKey(person)
@@ -116,7 +116,7 @@ func TestProtoStreamMarshalProtoKey(t *testing.T) {
 
 // TestProtoStreamMarshal_AllPrimitiveKeys tests all supported primitive key types
 func TestProtoStreamMarshal_AllPrimitiveKeys(t *testing.T) {
-	m := hotrod.ProtoStreamMarshaller()
+	m := &hotrod.ProtoStreamMarshaller{}
 
 	tests := []struct {
 		name  string
@@ -197,7 +197,7 @@ func TestProtoStreamMarshal_AllPrimitiveKeys(t *testing.T) {
 
 // TestProtoStreamMarshal_AllPrimitiveValues tests all primitive value types
 func TestProtoStreamMarshal_AllPrimitiveValues(t *testing.T) {
-	m := hotrod.ProtoStreamMarshaller()
+	m := &hotrod.ProtoStreamMarshaller{}
 
 	// Note: ProtoStream values must be proto.Message types
 	// Primitive values need to be wrapped in messages
@@ -251,7 +251,7 @@ func TestProtoStreamMarshal_AllPrimitiveValues(t *testing.T) {
 
 // TestProtoStreamMarshal_EdgeCases tests edge cases and special values
 func TestProtoStreamMarshal_EdgeCases(t *testing.T) {
-	m := hotrod.ProtoStreamMarshaller()
+	m := &hotrod.ProtoStreamMarshaller{}
 
 	t.Run("empty string key", func(t *testing.T) {
 		data, err := m.MarshalKey("")

@@ -67,7 +67,7 @@ func TestContinuousQuery_JoiningAndLeaving(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[string, *testproto.Person](
 		client, "cq-test",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.Person { return &testproto.Person{} },
 	)
 	rawCache := client.Cache("cq-test")
@@ -127,7 +127,7 @@ func TestContinuousQuery_NonMatchingEntryNoEvent(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[string, *testproto.Person](
 		client, "cq-nomatch",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.Person { return &testproto.Person{} },
 	)
 	rawCache := client.Cache("cq-nomatch")
@@ -165,7 +165,7 @@ func TestContinuousQuery_WithParam(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[string, *testproto.Person](
 		client, "cq-param",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.Person { return &testproto.Person{} },
 	)
 	rawCache := client.Cache("cq-param")

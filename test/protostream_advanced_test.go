@@ -43,7 +43,7 @@ func TestProtoStream_MultipleEntries(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[string, *testproto.Person](
 		client, "proto-multiple",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.Person { return &testproto.Person{} },
 	)
 
@@ -106,7 +106,7 @@ func TestProtoStream_UpdateOperations(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[string, *testproto.Person](
 		client, "proto-update",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.Person { return &testproto.Person{} },
 	)
 
@@ -162,7 +162,7 @@ func TestProtoStream_RemoveOperations(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[string, *testproto.Person](
 		client, "proto-remove",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.Person { return &testproto.Person{} },
 	)
 
@@ -212,7 +212,7 @@ func TestProtoStream_WithExpiration(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[string, *testproto.Person](
 		client, "proto-expiration",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.Person { return &testproto.Person{} },
 	)
 
@@ -273,7 +273,7 @@ func TestProtoStream_ConcurrentOperations(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[string, *testproto.Person](
 		client, "proto-concurrent",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.Person { return &testproto.Person{} },
 	)
 
@@ -343,7 +343,7 @@ func TestProtoStream_LargeProtoMessages(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[int32, *testproto.User](
 		client, "proto-large",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.User { return &testproto.User{} },
 	)
 

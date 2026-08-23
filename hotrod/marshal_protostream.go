@@ -9,23 +9,18 @@ import (
 	"infinispan.org/go-client/internal/protostream"
 )
 
-type protoStreamMarshaller struct{}
-
-// ProtoStreamMarshaller returns a Marshaller that encodes values as ProtoStream
-// WrappedMessage envelopes, compatible with Infinispan's server-side indexing
-// and Ickle queries.
+// ProtoStreamMarshaller encodes values as ProtoStream WrappedMessage envelopes,
+// compatible with Infinispan's server-side indexing and Ickle queries.
 //
 // Keys can be string, int32, int64, or proto.Message.
 // Values must implement proto.Message.
-func ProtoStreamMarshaller() Marshaller {
-	return &protoStreamMarshaller{}
-}
+type ProtoStreamMarshaller struct{}
 
-func (m *protoStreamMarshaller) MediaType() int32 {
+func (m *ProtoStreamMarshaller) MediaType() int32 {
 	return codec.MediaIDProtostream
 }
 
-func (m *protoStreamMarshaller) MarshalKey(key any) ([]byte, error) {
+func (m *ProtoStreamMarshaller) MarshalKey(key any) ([]byte, error) {
 	switch k := key.(type) {
 	case string:
 		return protostream.WrapString(k), nil
@@ -45,7 +40,7 @@ func (m *protoStreamMarshaller) MarshalKey(key any) ([]byte, error) {
 	}
 }
 
-func (m *protoStreamMarshaller) UnmarshalKey(data []byte, target any) error {
+func (m *ProtoStreamMarshaller) UnmarshalKey(data []byte, target any) error {
 	switch t := target.(type) {
 	case *string:
 		s, err := protostream.UnwrapString(data)
@@ -65,7 +60,7 @@ func (m *protoStreamMarshaller) UnmarshalKey(data []byte, target any) error {
 	}
 }
 
-func (m *protoStreamMarshaller) MarshalValue(value any) ([]byte, error) {
+func (m *ProtoStreamMarshaller) MarshalValue(value any) ([]byte, error) {
 	msg, ok := value.(proto.Message)
 	if !ok {
 		return nil, fmt.Errorf("value must implement proto.Message, got %T", value)
@@ -78,7 +73,7 @@ func (m *protoStreamMarshaller) MarshalValue(value any) ([]byte, error) {
 	return protostream.WrapMessage(b, typeName), nil
 }
 
-func (m *protoStreamMarshaller) UnmarshalValue(data []byte, target any) error {
+func (m *ProtoStreamMarshaller) UnmarshalValue(data []byte, target any) error {
 	msg, ok := target.(proto.Message)
 	if !ok {
 		return fmt.Errorf("target must implement proto.Message, got %T", target)

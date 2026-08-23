@@ -110,7 +110,7 @@ func TestNonCircularReference_Success(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[string, *testproto.Team](
 		client, "non-circular-test",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.Team { return &testproto.Team{} },
 	)
 

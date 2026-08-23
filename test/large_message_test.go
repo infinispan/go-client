@@ -61,7 +61,7 @@ func TestLargeMessage_1MB(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[int32, *testproto.Essay](
 		client, "essay-1mb",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.Essay { return &testproto.Essay{} },
 	)
 
@@ -134,7 +134,7 @@ func TestLargeMessage_10MB(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[int32, *testproto.Essay](
 		client, "essay-10mb",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.Essay { return &testproto.Essay{} },
 	)
 
@@ -218,7 +218,7 @@ func TestLargeMessage_50MB(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[int32, *testproto.Essay](
 		client, "essay-50mb",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.Essay { return &testproto.Essay{} },
 	)
 
@@ -306,7 +306,7 @@ func TestLargeMessage_Performance(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[int32, *testproto.Essay](
 		client, "essay-perf",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.Essay { return &testproto.Essay{} },
 	)
 
@@ -378,7 +378,7 @@ func TestLargeMessage_ConcurrentPuts(t *testing.T) {
 
 	cache := hotrod.NewTypedCache[int32, *testproto.Essay](
 		client, "essay-concurrent",
-		hotrod.ProtoStreamMarshaller(),
+		&hotrod.ProtoStreamMarshaller{},
 		func() *testproto.Essay { return &testproto.Essay{} },
 	)
 
