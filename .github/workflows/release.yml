@@ -29,7 +29,7 @@ jobs:
           go-version: '1.25.x'
 
       - name: Install asciidoctor
-        run: sudo gem install asciidoctor asciidoctor-tabs --no-document
+        run: sudo gem install asciidoctor 'asciidoctor-tabs:1.0.0.beta.6' --no-document
 
       - name: Build documentation archive
         run: make docs-zip
