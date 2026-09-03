@@ -37,10 +37,10 @@ created, err := counters.Define(ctx, "my-counter", &hotrod.CounterConfiguration{
 names, err := counters.Names(ctx)
 
 // Check if a counter exists.
-exists, err := counters.IsDefined(ctx, "my-counter")
+exists, err := counters.Defined(ctx, "my-counter")
 
 // Get the configuration of a counter.
-config, err := counters.GetConfiguration(ctx, "my-counter")
+config, err := counters.Configuration(ctx, "my-counter")
 
 // Remove a counter. It is re-created if accessed again.
 err = counters.Remove(ctx, "my-counter")

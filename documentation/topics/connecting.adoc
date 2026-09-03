@@ -1,4 +1,4 @@
-== Connecting to Infinispan
+== Connecting to {brandname}
 
 === Connection URI
 
@@ -53,5 +53,5 @@ You can also set these options through URI query parameters:
 
 [source]
 ----
-hotrod://admin:password@localhost:11222?connect_timeout=5s&socket_timeout=10s&tcp_no_delay=true&tcp_keep_alive=false
+hotrod://admin:password@localhost:11222?connect_timeout=5000&socket_timeout=10000&tcp_no_delay=true&tcp_keep_alive=false
 ----

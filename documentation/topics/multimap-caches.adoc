@@ -11,12 +11,12 @@ mm := client.Multimap("my-multimap")
 ----
 
 By default, duplicate key-value pairs are not allowed.
-Use `WithSupportsDuplicates` to permit storing the same value multiple times under the same key:
+Use `WithDuplicates` to permit storing the same value multiple times under the same key:
 
 [source,go]
 ----
 mm := client.Multimap("my-multimap",
-	hotrod.WithSupportsDuplicates(true),
+	hotrod.WithDuplicates(true),
 )
 ----
 
@@ -27,7 +27,7 @@ Each value is stored as a separate entry:
 
 [source,go]
 ----
-err := mm.Put(ctx, []byte("colors"), []byte("red"), []byte("blue"), []byte("green"))
+err := mm.Put(ctx, []byte("colors"), [][]byte{[]byte("red"), []byte("blue"), []byte("green")})
 ----
 
 Use `Get` to retrieve all values for a key:
@@ -40,13 +40,13 @@ for _, v := range values {
 }
 ----
 
-Use `PutWithOptions` to add values with expiration settings:
+Use `Put` with options to add values with expiration settings:
 
 [source,go]
 ----
-err := mm.PutWithOptions(ctx, []byte("colors"),
+err := mm.Put(ctx, []byte("colors"),
 	[][]byte{[]byte("red"), []byte("blue")},
-	[]hotrod.PutOption{hotrod.WithLifespan(30 * time.Second)},
+	hotrod.WithLifespan(30*time.Second),
 )
 ----
 
@@ -80,13 +80,13 @@ removed, err = mm.RemoveEntry(ctx, []byte("colors"), []byte("red"))
 
 === Checking Contents
 
-`ContainsKey(ctx, key)`::
+`HasKey(ctx, key)`::
 Reports whether the multimap contains any values for the given key.
 
-`ContainsValue(ctx, value)`::
+`HasValue(ctx, value)`::
 Reports whether the multimap contains the given value under any key.
 
-`ContainsEntry(ctx, key, value)`::
+`HasEntry(ctx, key, value)`::
 Reports whether the multimap contains the specific key-value pair.
 
 `Size(ctx)`::
@@ -94,7 +94,7 @@ Returns the total number of key-value pairs across all keys.
 
 [source,go]
 ----
-hasKey, err := mm.ContainsKey(ctx, []byte("colors"))
-hasEntry, err := mm.ContainsEntry(ctx, []byte("colors"), []byte("red"))
+hasKey, err := mm.HasKey(ctx, []byte("colors"))
+hasEntry, err := mm.HasEntry(ctx, []byte("colors"), []byte("red"))
 total, err := mm.Size(ctx)
 ----

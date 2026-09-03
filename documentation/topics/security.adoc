@@ -59,7 +59,7 @@ client, err := hotrod.NewClient(ctx, "hotrod://localhost:11222",
 
 [NOTE]
 ====
-OAUTHBEARER requires the Infinispan server to be configured with a token realm, for example backed by Keycloak or another OAuth2 provider.
+OAUTHBEARER requires the {brandname} server to be configured with a token realm, for example backed by Keycloak or another OAuth2 provider.
 ====
 
 === TLS and Mutual TLS

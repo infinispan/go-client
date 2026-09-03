@@ -1,8 +1,15 @@
-= Infinispan Go Client Guide
+:brandname: Infinispan
+
+= {brandname} Hot Rod Go Client Guide
 :toc: left
 :toclevels: 3
+:source-highlighter: highlight.js
+:highlightjs-theme: github
+:icons: font
+:docinfo: shared-head
+:docinfodir: docinfo
 
-This guide covers the Infinispan Go client for the Hot Rod binary protocol.
+This guide covers the {brandname} Go client for the Hot Rod binary protocol.
 
 include::topics/getting-started.adoc[]
 

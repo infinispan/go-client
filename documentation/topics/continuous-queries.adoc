@@ -44,7 +44,7 @@ Each `CQEvent` contains:
 
 `WithCQParam(name string, value any)`::
 Adds a named parameter binding to the Ickle query.
-Supported value types are `string`, `int32`, and `int64`.
+Supported value types are `string`, `int32`, `int`, `int64`, `float32`, `float64`, `bool`, and `[]float32`.
 
 `WithCQChannelSize(n int)`::
 Sets the buffer size of the continuous query event channel.
