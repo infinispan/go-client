@@ -29,7 +29,7 @@ content, found, err := schemas.Get(ctx, "person.proto")
 === Creating a Typed Cache
 
 Use `NewTypedCache` to work with Go types instead of raw bytes.
-By default it uses `ProtoStreamMarshaller` which handles serialization to and from the ProtoStream format that the Infinispan server expects.
+By default it uses `ProtoStreamMarshaller` which handles serialization to and from the ProtoStream format that the {brandname} server expects.
 
 [source,go]
 ----

@@ -6,7 +6,7 @@ DOC_ZIP := _site.zip
 DOCS_OUT := _docs
 DOCS_ZIP := docs.zip
 
-.PHONY: help build vet lint vulncheck test test-integration check doc doc-zip docs-zip clean
+.PHONY: help build vet lint vulncheck test test-integration check doc doc-zip docs docs-zip clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
@@ -39,10 +39,14 @@ doc: $(GOBIN)/doc2go ## Generate HTML API docs to _site/
 doc-zip: doc ## Generate API docs and package as _site.zip
 	cd $(DOC_OUT) && zip -qr ../$(DOC_ZIP) .
 
-docs-zip: doc ## Render user guide + API docs and package as docs.zip
+docs: ## Render user guide HTML
 	rm -rf $(DOCS_OUT)
+	mkdir -p $(DOCS_OUT)
+	asciidoctor -r asciidoctor-tabs -o $(DOCS_OUT)/index.html documentation/index.adoc
+	cp -r documentation/css documentation/js $(DOCS_OUT)/
+
+docs-zip: doc docs ## Render user guide + API docs and package as docs.zip
 	mkdir -p $(DOCS_OUT)/api
-	asciidoctor -o $(DOCS_OUT)/go_client.html documentation/infinispan-go-client.adoc
 	cp -r $(DOC_OUT)/* $(DOCS_OUT)/api/
 	cd $(DOCS_OUT) && zip -qr ../$(DOCS_ZIP) .
 

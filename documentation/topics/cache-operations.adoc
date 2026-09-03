@@ -40,7 +40,7 @@ Returns `true` if stored, `false` if the key was already present.
 Replaces the value only if the key already exists.
 Returns `true` if replaced, `false` if the key was not found.
 
-`ContainsKey(ctx, key)`::
+`Has(ctx, key)`::
 Returns `true` if the cache contains an entry for the given key.
 
 `Clear(ctx)`::

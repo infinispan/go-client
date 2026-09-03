@@ -5,7 +5,7 @@ These operations are executed as server tasks through the Hot Rod `Exec` operati
 
 [source,go]
 ----
-admin := client.Administration()
+admin := client.Admin()
 
 // Create a cache with XML configuration.
 err := admin.CreateCache(ctx, "my-cache", `<local-cache/>`)

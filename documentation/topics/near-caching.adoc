@@ -3,7 +3,7 @@
 === Overview
 
 Near caching stores recently accessed cache entries in a local bounded cache to avoid server round-trips on repeated reads.
-The Go client uses the Infinispan server bloom filter optimization: the server maintains a bloom filter of keys the client has cached and only sends invalidation events for keys that may be present locally.
+The Go client uses the {brandname} server bloom filter optimization: the server maintains a bloom filter of keys the client has cached and only sends invalidation events for keys that may be present locally.
 
 === Configuration
 
@@ -12,7 +12,7 @@ The Go client uses the Infinispan server bloom filter optimization: the server m
 nc, err := hotrod.NewNearCache(ctx, client, "my-cache",
 	hotrod.WithMaxNearCacheEntries(1000),
 )
-defer nc.Close(ctx)
+defer nc.Close()
 ----
 
 `WithMaxNearCacheEntries(n int)` sets the maximum number of entries in the local LRU cache.
