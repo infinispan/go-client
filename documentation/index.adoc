@@ -17,6 +17,8 @@ include::topics/connecting.adoc[]
 
 include::topics/security.adoc[]
 
+include::topics/client-intelligence.adoc[]
+
 include::topics/cache-operations.adoc[]
 
 include::topics/typed-caches.adoc[]
@@ -29,14 +31,14 @@ include::topics/queries.adoc[]
 
 include::topics/continuous-queries.adoc[]
 
-include::topics/client-intelligence.adoc[]
+include::topics/iteration.adoc[]
+
+include::topics/transactions.adoc[]
+
+include::topics/distributed-counters.adoc[]
 
 include::topics/multimap-caches.adoc[]
 
 include::topics/cache-administration.adoc[]
-
-include::topics/distributed-counters.adoc[]
-
-include::topics/iteration.adoc[]
 
 include::topics/building-and-testing.adoc[]

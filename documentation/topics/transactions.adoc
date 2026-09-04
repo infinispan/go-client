@@ -1,0 +1,109 @@
+== Transactions
+
+The client supports optimistic transactions on caches configured with transactional mode.
+Changes are tracked locally and sent to the server as a single atomic prepare request when the transaction commits.
+
+=== Cache Configuration
+
+The target cache must be configured with `mode="NON_XA"` and `locking="OPTIMISTIC"` on the server:
+
+[source,xml]
+----
+<distributed-cache>
+  <transaction mode="NON_XA" locking="OPTIMISTIC"/>
+</distributed-cache>
+----
+
+Use the `Admin` API to create such a cache programmatically:
+
+[source,go]
+----
+config := `<distributed-cache>
+  <transaction mode="NON_XA" locking="OPTIMISTIC"/>
+</distributed-cache>`
+err := client.Admin().GetOrCreateCache(ctx, "tx-cache", config)
+----
+
+=== Running a Transaction
+
+Use `client.WithTransaction` to execute a function within a transaction scope.
+Pass the cache name and a function that receives a `*TxCache`.
+If the function returns `nil`, the transaction commits.
+If the function returns an error or panics, the transaction rolls back automatically:
+
+[source,go]
+----
+err := client.WithTransaction(ctx, "tx-cache", func(tc *hotrod.TxCache) error {
+    if err := tc.Put(ctx, []byte("key"), []byte("value")); err != nil {
+        return err
+    }
+    val, found, err := tc.Get(ctx, []byte("key"))
+    if err != nil {
+        return err
+    }
+    _ = val
+    _ = found
+    return nil
+})
+----
+
+`TxCache` provides three operations:
+
+`Get(ctx, key)`::
+Fetches the value from the server on first access and records the entry version for optimistic locking.
+Subsequent reads within the same transaction return the locally cached value.
+
+`Put(ctx, key, value, opts...)`::
+Stores a key-value pair locally.
+Accepts the same `WithLifespan` and `WithMaxIdle` options as a regular `Put`.
+If the key was not read first, the write is sent to the server as an unconditional (blind) write.
+
+`Remove(ctx, key)`::
+Marks a key for deletion.
+If the key was not read first, the deletion is sent to the server as an unconditional remove.
+
+=== Optimistic Locking
+
+When `Get` is called before `Put` or `Remove`, the client records the entry version at read time.
+At commit, the server checks that the version has not changed since the read.
+If another client modified the entry in the meantime, the transaction is rejected:
+
+[source,go]
+----
+err := client.WithTransaction(ctx, "tx-cache", func(tc *hotrod.TxCache) error {
+    _, _, err := tc.Get(ctx, []byte("key"))
+    if err != nil {
+        return err
+    }
+    // ... application logic ...
+    return tc.Put(ctx, []byte("key"), []byte("new-value"))
+})
+if err != nil {
+    // Transaction was rejected due to a version conflict or application error.
+}
+----
+
+If `Put` or `Remove` is called without a prior `Get`, the modification is sent as an unconditional write and does not participate in version checking.
+
+=== Read-Only Transactions
+
+A transaction that only calls `Get` — with no `Put` or `Remove` — commits immediately without contacting the server, because there are no modifications to send.
+
+=== Transaction Options
+
+Use `WithTxTimeout` to set the server-side transaction timeout.
+The default is 60 seconds:
+
+[source,go]
+----
+err := client.WithTransaction(ctx, "tx-cache", func(tc *hotrod.TxCache) error {
+    return tc.Put(ctx, []byte("key"), []byte("value"))
+}, hotrod.WithTxTimeout(10*time.Second))
+----
+
+[NOTE]
+====
+The timeout controls how long the server holds the transaction open waiting for a commit or rollback.
+It does not limit the duration of the function passed to `WithTransaction`.
+Use a `context.WithTimeout` on the `ctx` argument to bound the overall execution time.
+====

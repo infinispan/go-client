@@ -1,4 +1,4 @@
-== Typed Caches with Protocol Buffers
+== Typed Caches and Marshalling
 
 === Schema Registration
 
