@@ -195,8 +195,8 @@ func (rc *RemoteCache) Put(ctx context.Context, key, value []byte, opts ...PutOp
 }
 
 // Get retrieves the value for a key. Returns (nil, false, nil) if the key does not exist.
-func (rc *RemoteCache) Get(ctx context.Context, key []byte) ([]byte, bool, error) {
-	return rc.getInternal(ctx, key)
+func (rc *RemoteCache) Get(ctx context.Context, key []byte, opts ...GetOption) ([]byte, bool, error) {
+	return rc.getInternal(ctx, key, opts...)
 }
 
 // MetadataValue holds a cache entry's value along with its server-side metadata.
@@ -211,11 +211,28 @@ type MetadataValue struct {
 
 // GetWithMetadata retrieves the value and metadata (version, lifespan, timestamps) for a key.
 func (rc *RemoteCache) GetWithMetadata(ctx context.Context, key []byte) (*MetadataValue, bool, error) {
+	return rc.getWithMetadataInternal(ctx, key)
+}
+
+// Peek retrieves the value and metadata for a key without affecting its expiration or eviction lifecycle: unlike
+// GetWithMetadata it does not reset the max-idle timer nor update the eviction access order. Entries that have
+// already exceeded their idle time but were not yet reaped may still be returned; evicted entries are not.
+// Requires Infinispan server 16.3+. Returns (nil, false, nil) if the key does not exist.
+func (rc *RemoteCache) Peek(ctx context.Context, key []byte) (*MetadataValue, bool, error) {
+	return rc.getWithMetadataInternal(ctx, key, WithGetFlag(FlagPeek))
+}
+
+func (rc *RemoteCache) getWithMetadataInternal(ctx context.Context, key []byte, opts ...GetOption) (*MetadataValue, bool, error) {
+	cfg := &getConfig{}
+	for _, o := range opts {
+		o(cfg)
+	}
 	resp, err := execute[*operation.GetWithMetadataResponse](ctx, rc.client.pool, &operation.GetWithMetadataOp{
 		Cache:   rc.name,
 		Key:     key,
 		KeyMT:   rc.keyMediaType,
 		ValueMT: rc.valMediaType,
+		OpFlags: cfg.flags,
 	})
 	if err != nil {
 		return nil, false, err

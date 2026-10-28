@@ -26,6 +26,10 @@ const (
 	FlagSkipCacheLoad            Flag = 0x0008
 	FlagSkipIndexing             Flag = 0x0010
 	FlagSkipListenerNotification Flag = 0x0020
+
+	// FlagPeek skips updating the entry's last access time, so a get with this flag does not reset max-idle
+	// expiration or update eviction order. Requires Infinispan server 16.3+. See RemoteCache.Peek.
+	FlagPeek Flag = 0x0040
 )
 
 // Option configures a Client.

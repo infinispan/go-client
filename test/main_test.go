@@ -2,7 +2,9 @@ package hotrod_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 	"testing"
@@ -15,7 +17,34 @@ import (
 var (
 	sharedContainer testcontainers.Container
 	sharedAddr      string
+	serverVersion   string // e.g. "Infinispan 'N/A' 16.3.0-SNAPSHOT", fetched from GET /rest/v3/server; empty if unavailable
 )
+
+// fetchServerVersion queries the server info endpoint (served on the Hot Rod port since the single-port design).
+func fetchServerVersion(addr string) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, "GET", "http://"+addr+"/rest/v3/server", nil)
+	if err != nil {
+		return
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "warn: could not fetch server version: %v\n", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	var info struct {
+		Version string `json:"version"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&info); err != nil || info.Version == "" {
+		fmt.Fprintf(os.Stderr, "warn: could not decode server version: %v\n", err)
+		return
+	}
+	serverVersion = info.Version
+}
 
 func isShort() bool {
 	for _, arg := range os.Args {
